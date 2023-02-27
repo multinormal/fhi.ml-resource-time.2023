@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}27 Feb 2023, 13:40:33
+ {txt}opened on:  {res}27 Feb 2023, 13:46:48
 {txt}
 {com}. 
 . // Set up globals.
@@ -77,7 +77,7 @@
 {com}. assert r(datasignature) == "${c -(}signature{c )-}"
 {txt}
 {com}. 
-. // Rename the health/welfare variable and use value labels.
+. // Rename and encode the health/welfare variable.
 . tempvar field
 {txt}
 {com}. rename AreaHealthorWelfare `field'
@@ -92,7 +92,19 @@
 {com}. encode `field' , generate(field)
 {txt}
 {com}. 
-. 
+. // Rename the variable that specifies whether any synthesis was prespecified.
+. generate prespecified = 0
+{txt}
+{com}. replace  prespecified = 1 if SynthesisplannednoneYorN == "Y"
+{txt}(20 real changes made)
+
+{com}. label define prespecified 0 No 1 Yes
+{txt}
+{com}. label values prespecified prespecified
+{txt}
+{com}. drop SynthesisplannednoneYorN
+{txt}
+{com}. 
 {txt}end of do-file
 
 {com}. 
@@ -115,20 +127,115 @@
 . 
 {txt}end of do-file
 
-{com}. codebook field 
+{com}. desc
+
+{txt}Contains data
+  obs:{res}            39                          
+{txt} vars:{res}            28                          
+{txt}{hline}
+              storage   display    value
+variable name   type    format     label      variable label
+{hline}
+{p 0 48}{res}{bind:ReviewID       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Review ID{p_end}
+{p 0 48}{bind:Kontanktpunkt  }{txt}{bind: str12   }{bind:{txt}%12s      }{space 1}{bind:         }{bind:  }{res}{res}Kontanktpunkt{p_end}
+{p 0 48}{bind:Reviewshortname}{txt}{bind: str105  }{bind:{txt}%105s     }{space 1}{bind:         }{bind:  }{res}{res}Review short name{p_end}
+{p 0 48}{bind:TitleEnglish   }{txt}{bind: str188  }{bind:{txt}%188s     }{space 1}{bind:         }{bind:  }{res}{res}Title (English){p_end}
+{p 0 48}{bind:TittelNorsk    }{txt}{bind: str178  }{bind:{txt}%178s     }{space 1}{bind:         }{bind:  }{res}{res}Tittel (Norsk){p_end}
+{p 0 48}{bind:Year           }{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Year{p_end}
+{p 0 48}{bind:Typeofproduct  }{txt}{bind: str3    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Type of product{p_end}
+{p 0 48}{bind:UpdateYN       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Update (Y/N){p_end}
+{p 0 48}{bind:HTAYorN        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}HTA (Y or N){p_end}
+{p 0 48}{bind:Synthesisplan~s}{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Synthesis planned: Meta-Analysis or qualitative (Y or N){p_end}
+{p 0 48}{bind:Synthesisplan~N}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Synthesis planned: NMA  (Y or N){p_end}
+{p 0 48}{bind:CommissionD~131}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commission Day (1-31){p_end}
+{p 0 48}{bind:CommissionM~112}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commission Month (1-12){p_end}
+{p 0 48}{bind:Commission~2020}{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commission Year (2020-){p_end}
+{p 0 48}{bind:CompletionD~131}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Completion Day (1-31){p_end}
+{p 0 48}{bind:CompletionM~112}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Completion Month (1-12){p_end}
+{p 0 48}{bind:Completion~2020}{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Completion Year (2020-){p_end}
+{p 0 48}{bind:ResourceUsePe~s}{txt}{bind: str7    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Resource Use (Person-Hours){p_end}
+{p 0 48}{bind:OngoingYorN    }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Ongoing (Y or N){p_end}
+{p 0 48}{bind:Commissioners~l}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commissioner satisfaction overall (1-5 scale){p_end}
+{p 0 48}{bind:Numberofdownl~e}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Number of downloads to date{p_end}
+{p 0 48}{bind:Recommendedvs~e}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recommended vs None{p_end}
+{p 0 48}{bind:Recommendedvs~m}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recommended vs Non-recom{p_end}
+{p 0 48}{bind:Recomvsunderuse}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recom vs under-use{p_end}
+{p 0 48}{bind:Recomvsoveruse }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recom vs over-use{p_end}
+{p 0 48}{bind:AnyvsNone      }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Any vs None{p_end}
+{p 0 48}{bind:field          }{txt}{bind: long    }{bind:{txt}%10.0g    }{space 1}{bind:field    }{bind:  }{res}{res}Area (Health or Welfare){p_end}
+{p 0 48}{bind:prespecified   }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{txt}prespecified{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}{p_end}
+{txt}{hline}
+Sorted by: 
+{res}     Note: Dataset has changed since last saved.
+
+{com}. codebook prespecified 
 
 {txt}{hline}
-{res}field{right:Area (Health or Welfare)}
+{res}prespecified{right:(unlabeled)}
 {txt}{hline}
 
-{col 19}type:  numeric ({res}long{txt})
-{ralign 22:label}:  {res:field}
+{col 19}type:  numeric ({res}float{txt})
+{ralign 22:label}:  {res:prespecified}
 
-{col 18}range:  [{res}1{txt},{res}2{txt}]{col 55}units:  {res}1
+{col 18}range:  [{res}0{txt},{res}1{txt}]{col 55}units:  {res}1
 {col 10}{txt}unique values:  {res}2{col 51}{txt}missing .:  {res}0{txt}/{res}39
 
 {txt}{col 13}tabulation:  Freq.   Numeric  Label
-{col 21}{res}        19{col 33}       1{col 43}{txt}Healthcare
-{col 21}{res}        20{col 33}       2{col 43}{txt}Welface
+{col 21}{res}        19{col 33}       0{col 43}{txt}No
+{col 21}{res}        20{col 33}       1{col 43}{txt}Yes
+
+{com}. list field prespecified 
+{txt}
+     {c TLC}{hline 12}{c -}{hline 10}{c TRC}
+     {c |} {res}     field   prespe~d {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+  1. {c |} {res}   Welface        Yes {txt}{c |}
+  2. {c |} {res}   Welface         No {txt}{c |}
+  3. {c |} {res}Healthcare        Yes {txt}{c |}
+  4. {c |} {res}Healthcare         No {txt}{c |}
+  5. {c |} {res}   Welface         No {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+  6. {c |} {res}   Welface         No {txt}{c |}
+  7. {c |} {res}Healthcare         No {txt}{c |}
+  8. {c |} {res}Healthcare         No {txt}{c |}
+  9. {c |} {res}   Welface         No {txt}{c |}
+ 10. {c |} {res}Healthcare         No {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+ 11. {c |} {res}Healthcare        Yes {txt}{c |}
+ 12. {c |} {res}Healthcare         No {txt}{c |}
+ 13. {c |} {res}Healthcare         No {txt}{c |}
+ 14. {c |} {res}   Welface         No {txt}{c |}
+ 15. {c |} {res}Healthcare        Yes {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+ 16. {c |} {res}   Welface        Yes {txt}{c |}
+ 17. {c |} {res}   Welface         No {txt}{c |}
+ 18. {c |} {res}   Welface        Yes {txt}{c |}
+ 19. {c |} {res}Healthcare         No {txt}{c |}
+ 20. {c |} {res}Healthcare         No {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+ 21. {c |} {res}Healthcare         No {txt}{c |}
+ 22. {c |} {res}   Welface        Yes {txt}{c |}
+ 23. {c |} {res}   Welface        Yes {txt}{c |}
+ 24. {c |} {res}   Welface        Yes {txt}{c |}
+ 25. {c |} {res}   Welface        Yes {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+ 26. {c |} {res}   Welface        Yes {txt}{c |}
+ 27. {c |} {res}   Welface        Yes {txt}{c |}
+ 28. {c |} {res}Healthcare         No {txt}{c |}
+ 29. {c |} {res}   Welface        Yes {txt}{c |}
+ 30. {c |} {res}   Welface         No {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+ 31. {c |} {res}   Welface        Yes {txt}{c |}
+ 32. {c |} {res}   Welface        Yes {txt}{c |}
+ 33. {c |} {res}Healthcare        Yes {txt}{c |}
+ 34. {c |} {res}Healthcare         No {txt}{c |}
+ 35. {c |} {res}Healthcare         No {txt}{c |}
+     {c LT}{hline 12}{c -}{hline 10}{c RT}
+ 36. {c |} {res}Healthcare        Yes {txt}{c |}
+ 37. {c |} {res}Healthcare        Yes {txt}{c |}
+ 38. {c |} {res}   Welface        Yes {txt}{c |}
+ 39. {c |} {res}Healthcare        Yes {txt}{c |}
+     {c BLC}{hline 12}{c -}{hline 10}{c BRC}
 
 {com}. 
