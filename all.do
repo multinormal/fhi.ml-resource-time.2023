@@ -3,7 +3,7 @@ version 16.1
 // Clear everything and set up logging.
 clear all
 log close _all
-log using products/log.smcl, name("TODO Log Title") replace
+log using products/log.smcl, name("ML-no-ML") replace
 
 // Set up globals.
 do globals/globals
