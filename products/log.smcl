@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}27 Feb 2023, 16:05:17
+ {txt}opened on:  {res}27 Feb 2023, 16:34:39
 {txt}
 {com}. 
 . // Set up globals.
@@ -92,21 +92,6 @@
 {com}. encode `field' , generate(field)
 {txt}
 {com}. 
-. // Rename the variable that specifies whether any synthesis was prespecified.
-. generate          prespecified = 0
-{txt}
-{com}. replace           prespecified = 1 if SynthesisplannednoneYorN == "Y"
-{txt}(20 real changes made)
-
-{com}. label    define   prespecified 0 No 1 Yes
-{txt}
-{com}. label    values   prespecified prespecified
-{txt}
-{com}. label    variable prespecified "Was any synthesis prespecified?"
-{txt}
-{com}. drop SynthesisplannednoneYorN
-{txt}
-{com}. 
 . // Define treatment variables.
 . // TODO: Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
 . local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
@@ -131,6 +116,38 @@
 (0 real changes made)
 (14 real changes made)
 (18 real changes made)
+
+{com}. 
+. // Define a value label for analyses that can be prespecified.
+. label define planned 0 No 1 Yes
+{txt}
+{com}. 
+. // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
+. // quantitative and qualitative), and NMA.
+. local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
+{txt}
+{com}. local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
+{txt}
+{com}. local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
+{txt}
+{com}. local SynthesisplannedNMAYorN      nma_planned           // New variable name. // TODO: Drop all NMAs from data.
+{txt}
+{com}. local synthesis_planned_label     "Was any synthesis planned?"
+{txt}
+{com}. local meta_analysis_planned_label "Was meta-analysis planned?"
+{txt}
+{com}. local nma_planned_label           "Was NMA planned?"
+{txt}
+{com}. foreach p of local planned {c -(}
+{txt}  2{com}.   generate       ``p'' = 0
+{txt}  3{com}.   replace        ``p'' = 1 if `p' != "N" // Works for one values coded "Both".
+{txt}  4{com}.   label values   ``p'' planned
+{txt}  5{com}.   label variable ``p'' "```p''_label'"
+{txt}  6{com}.   drop `p'
+{txt}  7{com}. {c )-}
+{txt}(20 real changes made)
+(18 real changes made)
+(0 real changes made)
 
 {com}. 
 . // Define the resource use variable.
@@ -256,14 +273,10 @@ variable name   type    format     label      variable label
 {p 0 48}{bind:Typeofproduct  }{txt}{bind: str3    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Type of product{p_end}
 {p 0 48}{bind:UpdateYN       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Update (Y/N){p_end}
 {p 0 48}{bind:HTAYorN        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}HTA (Y or N){p_end}
-{p 0 48}{bind:Synthesisplan~s}{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Synthesis planned: Meta-Analysis or qualitative (Y or N){p_end}
-{p 0 48}{bind:Synthesisplan~N}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Synthesis planned: NMA  (Y or N){p_end}
 {p 0 48}{bind:resource_use   }{txt}{bind: int     }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Resource Use (Person-Hours){p_end}
 {p 0 48}{bind:Commissioners~l}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commissioner satisfaction overall (1-5 scale){p_end}
 {p 0 48}{bind:Numberofdownl~e}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Number of downloads to date{p_end}
 {p 0 48}{bind:field          }{txt}{bind: long    }{bind:{txt}%10.0g    }{space 1}{bind:field    }{bind:  }{res}{res}Area (Health or Welfare){p_end}
-{p 0 48}{bind:prespecified   }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{txt}prespecified{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Was any synthesis prespecified?{p_end}
 {p 0 48}{bind:rec_vs_none    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_none{p_end}
 {p 0 48}{space 44}{bind:  }{res}{res}Recommended vs None{p_end}
 {p 0 48}{bind:rec_vs_nonrec  }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_nonrec{p_end}
@@ -274,6 +287,9 @@ variable name   type    format     label      variable label
 {p 0 48}{space 44}{bind:  }{res}{res}Recom vs under-use{p_end}
 {p 0 48}{bind:rec_vs_over    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_over{p_end}
 {p 0 48}{space 44}{bind:  }{res}{res}Recom vs over-use{p_end}
+{p 0 48}{bind:synthesis_pla~d}{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was any synthesis planned?{p_end}
+{p 0 48}{bind:meta_analysis~d}{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was meta-analysis planned?{p_end}
+{p 0 48}{bind:nma_planned    }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was NMA planned?{p_end}
 {p 0 48}{bind:completed      }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{txt}completed{p_end}
 {p 0 48}{space 44}{bind:  }{res}{res}Report completed?{p_end}
 {p 0 48}{bind:commission     }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}

@@ -12,14 +12,6 @@ replace `field' = "Healthcare" if `field' == "H"
 replace `field' = "Welface"    if `field' == "W"
 encode `field' , generate(field)
 
-// Rename the variable that specifies whether any synthesis was prespecified.
-generate          prespecified = 0
-replace           prespecified = 1 if SynthesisplannednoneYorN == "Y"
-label    define   prespecified 0 No 1 Yes
-label    values   prespecified prespecified
-label    variable prespecified "Was any synthesis prespecified?"
-drop SynthesisplannednoneYorN
-
 // Define treatment variables.
 // TODO: Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
 local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
@@ -32,6 +24,26 @@ foreach t of local treatments {
   replace `t' = "" if !regexm(`t', "[A-Z]") // Non-missing values are letters in [A-Z]
   encode  `t', generate(``t'')
   drop `t'
+}
+
+// Define a value label for analyses that can be prespecified.
+label define planned 0 No 1 Yes
+
+// Define variables that code for prespecified synthesis (any), meta-analysis (incl.
+// quantitative and qualitative), and NMA.
+local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
+local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
+local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
+local SynthesisplannedNMAYorN      nma_planned           // New variable name. // TODO: Drop all NMAs from data.
+local synthesis_planned_label     "Was any synthesis planned?"
+local meta_analysis_planned_label "Was meta-analysis planned?"
+local nma_planned_label           "Was NMA planned?"
+foreach p of local planned {
+  generate       ``p'' = 0
+  replace        ``p'' = 1 if `p' != "N" // Works for one values coded "Both".
+  label values   ``p'' planned
+  label variable ``p'' "```p''_label'"
+  drop `p'
 }
 
 // Define the resource use variable.
