@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}27 Feb 2023, 13:35:44
+ {txt}opened on:  {res}27 Feb 2023, 13:40:33
 {txt}
 {com}. 
 . // Set up globals.
@@ -77,8 +77,21 @@
 {com}. assert r(datasignature) == "${c -(}signature{c )-}"
 {txt}
 {com}. 
-. 
-. 
+. // Rename the health/welfare variable and use value labels.
+. tempvar field
+{txt}
+{com}. rename AreaHealthorWelfare `field'
+{res}{txt}
+{com}. replace `field' = "Healthcare" if `field' == "H"
+{txt}variable {bf}__000000{sf} was {bf}{res}str1{sf}{txt} now {bf}{res}str10{sf}
+{txt}(19 real changes made)
+
+{com}. replace `field' = "Welface"    if `field' == "W"
+{txt}(20 real changes made)
+
+{com}. encode `field' , generate(field)
+{txt}
+{com}. 
 . 
 {txt}end of do-file
 
@@ -101,5 +114,21 @@
 . * do reports/report
 . 
 {txt}end of do-file
+
+{com}. codebook field 
+
+{txt}{hline}
+{res}field{right:Area (Health or Welfare)}
+{txt}{hline}
+
+{col 19}type:  numeric ({res}long{txt})
+{ralign 22:label}:  {res:field}
+
+{col 18}range:  [{res}1{txt},{res}2{txt}]{col 55}units:  {res}1
+{col 10}{txt}unique values:  {res}2{col 51}{txt}missing .:  {res}0{txt}/{res}39
+
+{txt}{col 13}tabulation:  Freq.   Numeric  Label
+{col 21}{res}        19{col 33}       1{col 43}{txt}Healthcare
+{col 21}{res}        20{col 33}       2{col 43}{txt}Welface
 
 {com}. 
