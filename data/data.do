@@ -5,5 +5,105 @@ import excel "${data_file}", sheet("${sheet_name}") cellrange(${cellrange}) firs
 datasignature
 assert r(datasignature) == "${signature}"
 
+// Define a variable that specifies the product's year.
+tempvar year
+rename Year `year'
+destring `year', generate(year)
 
+// Rename and encode the health/welfare variable.
+tempvar field
+rename AreaHealthorWelfare `field'
+replace `field' = "Healthcare" if `field' == "H"
+replace `field' = "Welface"    if `field' == "W"
+encode `field' , generate(field)
 
+// Rename and encode the variable that codes for the type of product.
+tempvar product_type
+rename Typeofproduct `product_type'
+encode `product_type', generate(product_type)
+
+// Rename and encode the variable that codes for whether product is an update.
+tempvar update
+rename UpdateYN `update'
+replace `update' = strtrim(`update')
+encode `update', generate(update)
+
+// Rename and encode the variable that codes for whether product is an HTA.
+tempvar hta
+rename HTAYorN `hta'
+encode `hta', generate(hta)
+
+// Define treatment variables.
+// TODO: Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
+local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
+local RecommendedvsNone     rec_vs_none   // New variable name.
+local RecommendedvsNonrecom rec_vs_nonrec // New variable name.
+local AnyvsNone             any_vs_none   // New variable name.
+local Recomvsunderuse       rec_vs_under  // New variable name.
+local Recomvsoveruse        rec_vs_over   // New variable name.
+foreach t of local treatments {
+  replace `t' = "" if !regexm(`t', "[A-Z]") // Non-missing values are letters in [A-Z]
+  encode  `t', generate(``t'')
+  drop `t'
+}
+
+// Define a value label for analyses that can be prespecified.
+label define planned 0 No 1 Yes
+
+// Define variables that code for prespecified synthesis (any), meta-analysis (incl.
+// quantitative and qualitative), and NMA.
+local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
+local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
+local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
+local SynthesisplannedNMAYorN      nma_planned           // New variable name. // TODO: Drop all NMAs from data.
+local synthesis_planned_label     "Was any synthesis planned?"
+local meta_analysis_planned_label "Was meta-analysis planned?"
+local nma_planned_label           "Was NMA planned?"
+foreach p of local planned {
+  generate       ``p'' = 0
+  replace        ``p'' = 1 if `p' != "N" // Works for one values coded "Both".
+  label values   ``p'' planned
+  label variable ``p'' "```p''_label'"
+  drop `p'
+}
+
+// Define the resource use variable.
+// TODO: Do we need to log-transform to estimate *relative* resource use?
+rename ResourceUsePersonHours resource_use
+destring resource_use, replace force
+
+// Define a completed variable (analogous to a failure indicator in survival analysis).
+generate          completed = 1
+replace           completed = 0 if OngoingYorN == "Y"
+label    define   completed 0 No 1 Yes
+label    values   completed completed
+label    variable completed "Report completed?"
+drop OngoingYorN
+
+// Define commision date variable.
+tempvar c_day c_month c_year commission
+rename CommissionDay131   `c_day'
+rename CommissionMonth112 `c_month'
+rename CommissionYear2020 `c_year'
+generate `commission' = `c_day' + "/" + `c_month' + "/" + `c_year'
+generate commission = date(`commission', "DMY")
+
+// Define completion date variable.
+tempvar c_day c_month c_year completion
+rename CompletionDay131   `c_day'
+rename CompletionMonth112 `c_month'
+rename CompletionYear2020 `c_year'
+generate `completion' = `c_day' + "/" + `c_month' + "/" + `c_year'
+generate completion = date(`completion', "DMY")
+// Set right-censoring date for ongoing reviews.
+tempvar max
+egen `max' = max(completion)
+replace completion = `max' if missing(completion)
+
+// stset the data.
+stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
+
+// We do not have data on number of downloads or comissioner satisfaction.
+drop Commissionersatisfactionoveral Numberofdownloadstodate
+
+// TODO: Drop other variables with uppercase first letters?

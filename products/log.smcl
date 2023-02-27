@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}27 Feb 2023, 13:35:44
+ {txt}opened on:  {res}27 Feb 2023, 16:57:05
 {txt}
 {com}. 
 . // Set up globals.
@@ -77,8 +77,202 @@
 {com}. assert r(datasignature) == "${c -(}signature{c )-}"
 {txt}
 {com}. 
-. 
-. 
+. // Define a variable that specifies the product's year.
+. tempvar year
+{txt}
+{com}. rename Year `year'
+{res}{txt}
+{com}. destring `year', generate(year)
+{txt}__000000: all characters numeric; year {res}generated {txt}as {res}int
+{txt}
+{com}. 
+. // Rename and encode the health/welfare variable.
+. tempvar field
+{txt}
+{com}. rename AreaHealthorWelfare `field'
+{res}{txt}
+{com}. replace `field' = "Healthcare" if `field' == "H"
+{txt}variable {bf}__000001{sf} was {bf}{res}str1{sf}{txt} now {bf}{res}str10{sf}
+{txt}(19 real changes made)
+
+{com}. replace `field' = "Welface"    if `field' == "W"
+{txt}(20 real changes made)
+
+{com}. encode `field' , generate(field)
+{txt}
+{com}. 
+. // Rename and encode the variable that codes for the type of product.
+. tempvar product_type
+{txt}
+{com}. rename Typeofproduct `product_type'
+{res}{txt}
+{com}. encode `product_type', generate(product_type)
+{txt}
+{com}. 
+. // Rename and encode the variable that codes for whether product is an update.
+. tempvar update
+{txt}
+{com}. rename UpdateYN `update'
+{res}{txt}
+{com}. replace `update' = strtrim(`update')
+{txt}(2 real changes made)
+
+{com}. encode `update', generate(update)
+{txt}
+{com}. 
+. // Rename and encode the variable that codes for whether product is an HTA.
+. tempvar hta
+{txt}
+{com}. rename HTAYorN `hta'
+{res}{txt}
+{com}. encode `hta', generate(hta)
+{txt}
+{com}. 
+. // Define treatment variables.
+. // TODO: Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
+. local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
+{txt}
+{com}. local RecommendedvsNone     rec_vs_none   // New variable name.
+{txt}
+{com}. local RecommendedvsNonrecom rec_vs_nonrec // New variable name.
+{txt}
+{com}. local AnyvsNone             any_vs_none   // New variable name.
+{txt}
+{com}. local Recomvsunderuse       rec_vs_under  // New variable name.
+{txt}
+{com}. local Recomvsoveruse        rec_vs_over   // New variable name.
+{txt}
+{com}. foreach t of local treatments {c -(}
+{txt}  2{com}.   replace `t' = "" if !regexm(`t', "[A-Z]") // Non-missing values are letters in [A-Z]
+{txt}  3{com}.   encode  `t', generate(``t'')
+{txt}  4{com}.   drop `t'
+{txt}  5{com}. {c )-}
+{txt}(6 real changes made)
+(12 real changes made)
+(0 real changes made)
+(14 real changes made)
+(18 real changes made)
+
+{com}. 
+. // Define a value label for analyses that can be prespecified.
+. label define planned 0 No 1 Yes
+{txt}
+{com}. 
+. // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
+. // quantitative and qualitative), and NMA.
+. local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
+{txt}
+{com}. local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
+{txt}
+{com}. local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
+{txt}
+{com}. local SynthesisplannedNMAYorN      nma_planned           // New variable name. // TODO: Drop all NMAs from data.
+{txt}
+{com}. local synthesis_planned_label     "Was any synthesis planned?"
+{txt}
+{com}. local meta_analysis_planned_label "Was meta-analysis planned?"
+{txt}
+{com}. local nma_planned_label           "Was NMA planned?"
+{txt}
+{com}. foreach p of local planned {c -(}
+{txt}  2{com}.   generate       ``p'' = 0
+{txt}  3{com}.   replace        ``p'' = 1 if `p' != "N" // Works for one values coded "Both".
+{txt}  4{com}.   label values   ``p'' planned
+{txt}  5{com}.   label variable ``p'' "```p''_label'"
+{txt}  6{com}.   drop `p'
+{txt}  7{com}. {c )-}
+{txt}(20 real changes made)
+(18 real changes made)
+(0 real changes made)
+
+{com}. 
+. // Define the resource use variable.
+. // TODO: Do we need to log-transform to estimate *relative* resource use?
+. rename ResourceUsePersonHours resource_use
+{res}{txt}
+{com}. destring resource_use, replace force
+{txt}resource_use: contains nonnumeric characters; {res}replaced {txt}as {res}int
+{txt}(1 missing value generated)
+{res}{txt}
+{com}. 
+. // Define a completed variable (analogous to a failure indicator in survival analysis).
+. generate          completed = 1
+{txt}
+{com}. replace           completed = 0 if OngoingYorN == "Y"
+{txt}(3 real changes made)
+
+{com}. label    define   completed 0 No 1 Yes
+{txt}
+{com}. label    values   completed completed
+{txt}
+{com}. label    variable completed "Report completed?"
+{txt}
+{com}. drop OngoingYorN
+{txt}
+{com}. 
+. // Define commision date variable.
+. tempvar c_day c_month c_year commission
+{txt}
+{com}. rename CommissionDay131   `c_day'
+{res}{txt}
+{com}. rename CommissionMonth112 `c_month'
+{res}{txt}
+{com}. rename CommissionYear2020 `c_year'
+{res}{txt}
+{com}. generate `commission' = `c_day' + "/" + `c_month' + "/" + `c_year'
+{txt}
+{com}. generate commission = date(`commission', "DMY")
+{txt}
+{com}. 
+. // Define completion date variable.
+. tempvar c_day c_month c_year completion
+{txt}
+{com}. rename CompletionDay131   `c_day'
+{res}{txt}
+{com}. rename CompletionMonth112 `c_month'
+{res}{txt}
+{com}. rename CompletionYear2020 `c_year'
+{res}{txt}
+{com}. generate `completion' = `c_day' + "/" + `c_month' + "/" + `c_year'
+{txt}
+{com}. generate completion = date(`completion', "DMY")
+{txt}(3 missing values generated)
+
+{com}. // Set right-censoring date for ongoing reviews.
+. tempvar max
+{txt}
+{com}. egen `max' = max(completion)
+{txt}
+{com}. replace completion = `max' if missing(completion)
+{txt}(3 real changes made)
+
+{com}. 
+. // stset the data.
+. stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
+
+     {txt}failure event:  {res}completed != 0 & completed < .
+{txt}obs. time interval:  {res}(origin, completion]
+{txt} exit on or before:  {res}failure
+    {txt}t for analysis:  {res}(time-origin)/7
+            {txt}origin:  {res}time commission
+
+{txt}{hline 78}
+{res}         39{txt}  total observations
+{res}          1{txt}  observation ends on or before enter()
+{hline 78}
+{res}         38{txt}  observations remaining, representing
+{res}         35{txt}  failures in single-record/single-failure data
+{res}      1,200{txt}  total analysis time at risk and under observation
+                                                at risk from t = {res}        0
+                                     {txt}earliest observed entry t = {res}        0
+                                          {txt}last observed exit t = {res} 101.8571
+{txt}
+{com}. 
+. // We do not have data on number of downloads or comissioner satisfaction.
+. drop Commissionersatisfactionoveral Numberofdownloadstodate
+{txt}
+{com}. 
+. // TODO: Drop other variables with uppercase first letters?
 . 
 {txt}end of do-file
 
