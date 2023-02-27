@@ -5,12 +5,33 @@ import excel "${data_file}", sheet("${sheet_name}") cellrange(${cellrange}) firs
 datasignature
 assert r(datasignature) == "${signature}"
 
+// Define a variable that specifies the product's year.
+tempvar year
+rename Year `year'
+destring `year', generate(year)
+
 // Rename and encode the health/welfare variable.
 tempvar field
 rename AreaHealthorWelfare `field'
 replace `field' = "Healthcare" if `field' == "H"
 replace `field' = "Welface"    if `field' == "W"
 encode `field' , generate(field)
+
+// Rename and encode the variable that codes for the type of product.
+tempvar product_type
+rename Typeofproduct `product_type'
+encode `product_type', generate(product_type)
+
+// Rename and encode the variable that codes for whether product is an update.
+tempvar update
+rename UpdateYN `update'
+replace `update' = strtrim(`update')
+encode `update', generate(update)
+
+// Rename and encode the variable that codes for whether product is an HTA.
+tempvar hta
+rename HTAYorN `hta'
+encode `hta', generate(hta)
 
 // Define treatment variables.
 // TODO: Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
@@ -82,3 +103,7 @@ replace completion = `max' if missing(completion)
 // stset the data.
 stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
+// We do not have data on number of downloads or comissioner satisfaction.
+drop Commissionersatisfactionoveral Numberofdownloadstodate
+
+// TODO: Drop other variables with uppercase first letters?
