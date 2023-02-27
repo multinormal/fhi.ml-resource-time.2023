@@ -1,0 +1,143 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}ML noML
+       {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}27 Feb 2023, 13:24:24
+{txt}
+{com}. 
+. // Set up globals.
+. do globals/globals
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. global data_file  "data/raw/Blinded data sheet_310123 - Downloaded 27-02-23.xlsx"
+{txt}
+{com}. global sheet_name "Data Extraction Form"
+{txt}
+{com}. global cellrange  A1:AB40
+{txt}
+{com}. global signature "252:28(17933):2330098852:1894277184"
+{txt}
+{com}. 
+. global random_seed 1234
+{txt}
+{com}. 
+. global report_filename "products/report.docx"
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. 
+. // Set up Stata.
+. do setup/setup
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. // Set the random number generator seed.
+. set rng  mt64s
+{txt}
+{com}. set seed ${c -(}random_seed{c )-}
+{txt}
+{com}. set rngstream 1
+{txt}
+{com}. 
+. // Set up Stata's path to use the "packages" directory for add-on packages.
+. net set ado "./packages"
+{txt}
+{com}. sysdir set PERSONAL "./packages"
+{txt}
+{com}. 
+. // Specify formats.
+. set cformat %9.2f
+{txt}
+{com}. set pformat %5.2f
+{txt}
+{com}. set sformat %8.2f
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. 
+. // Import and process the data.
+. do data/data
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. // Load the data and check its signature is as expected.
+. import excel "${c -(}data_file{c )-}", sheet("${c -(}sheet_name{c )-}") firstrow allstring
+{res}{text}(28 vars, 252 obs)
+
+{com}. datasignature
+  {res}252:28(17933):2330098852:1894277184
+{txt}
+{com}. assert r(datasignature) == "${c -(}signature{c )-}"
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. 
+. * // Do estimation.
+. * do estimation/estimate
+. 
+. * // Make figures
+. * do figures/figures
+. 
+. * // Obtain the git revision hash, which is used in the reports.
+. * tempfile git_revision_filename
+. * tempname revision_file
+. * shell git rev-parse --short HEAD > "`git_revision_filename'"
+. * file open `revision_file' using `git_revision_filename', read text
+. * file read `revision_file' line
+. * global git_revision = "`macval(line)'"
+. 
+. * // Make the report.
+. * do reports/report
+. 
+{txt}end of do-file
+
+{com}. desc
+
+{txt}Contains data
+  obs:{res}           252                          
+{txt} vars:{res}            28                          
+{txt}{hline}
+              storage   display    value
+variable name   type    format     label      variable label
+{hline}
+{p 0 48}{res}{bind:ReviewID       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Review ID{p_end}
+{p 0 48}{bind:Kontanktpunkt  }{txt}{bind: str12   }{bind:{txt}%12s      }{space 1}{bind:         }{bind:  }{res}{res}Kontanktpunkt{p_end}
+{p 0 48}{bind:Reviewshortname}{txt}{bind: str105  }{bind:{txt}%105s     }{space 1}{bind:         }{bind:  }{res}{res}Review short name{p_end}
+{p 0 48}{bind:TitleEnglish   }{txt}{bind: str188  }{bind:{txt}%188s     }{space 1}{bind:         }{bind:  }{res}{res}Title (English){p_end}
+{p 0 48}{bind:TittelNorsk    }{txt}{bind: str178  }{bind:{txt}%178s     }{space 1}{bind:         }{bind:  }{res}{res}Tittel (Norsk){p_end}
+{p 0 48}{bind:Year           }{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Year{p_end}
+{p 0 48}{bind:AreaHealthorW~e}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Area (Health or Welfare){p_end}
+{p 0 48}{bind:Typeofproduct  }{txt}{bind: str3    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Type of product{p_end}
+{p 0 48}{bind:UpdateYN       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Update (Y/N){p_end}
+{p 0 48}{bind:HTAYorN        }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}HTA (Y or N){p_end}
+{p 0 48}{bind:Synthesis~eYorN}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Synthesis planned: none (Y or N){p_end}
+{p 0 48}{bind:Synthesisplan~s}{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Synthesis planned: Meta-Analysis or qualitative (Y or N){p_end}
+{p 0 48}{bind:Synthesis~AYorN}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Synthesis planned: NMA  (Y or N){p_end}
+{p 0 48}{bind:CommissionD~131}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commission Day (1-31){p_end}
+{p 0 48}{bind:CommissionM~112}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commission Month (1-12){p_end}
+{p 0 48}{bind:Commission~2020}{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commission Year (2020-){p_end}
+{p 0 48}{bind:CompletionD~131}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Completion Day (1-31){p_end}
+{p 0 48}{bind:CompletionM~112}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Completion Month (1-12){p_end}
+{p 0 48}{bind:Completion~2020}{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Completion Year (2020-){p_end}
+{p 0 48}{bind:ResourceUsePe~s}{txt}{bind: str7    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Resource Use (Person-Hours){p_end}
+{p 0 48}{bind:OngoingYorN    }{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Ongoing (Y or N){p_end}
+{p 0 48}{bind:Commissioners~l}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Commissioner satisfaction overall (1-5 scale){p_end}
+{p 0 48}{bind:Numberofdownl~e}{txt}{bind: str1    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Number of downloads to date{p_end}
+{p 0 48}{bind:Recommendedvs~e}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recommended vs None{p_end}
+{p 0 48}{bind:Recommendedvs~m}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recommended vs Non-recom{p_end}
+{p 0 48}{bind:Recomvsunderuse}{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recom vs under-use{p_end}
+{p 0 48}{bind:Recomvsoveruse }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Recom vs over-use{p_end}
+{p 0 48}{bind:AnyvsNone      }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Any vs None{p_end}
+{txt}{hline}
+Sorted by: 
+{res}     Note: Dataset has changed since last saved.
+
+{com}. 
