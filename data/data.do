@@ -17,4 +17,9 @@ generate prespecified = 0
 replace  prespecified = 1 if SynthesisplannednoneYorN == "Y"
 label define prespecified 0 No 1 Yes
 label values prespecified prespecified
+label variable prespecified "Was any synthesis prespecified?"
 drop SynthesisplannednoneYorN
+
+// Define the resource use variable.
+rename ResourceUsePersonHours resource_use
+destring resource_use, replace force
