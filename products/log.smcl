@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}27 Feb 2023, 16:57:05
+ {txt}opened on:  {res}27 Feb 2023, 17:27:42
 {txt}
 {com}. 
 . // Set up globals.
@@ -186,15 +186,6 @@
 (0 real changes made)
 
 {com}. 
-. // Define the resource use variable.
-. // TODO: Do we need to log-transform to estimate *relative* resource use?
-. rename ResourceUsePersonHours resource_use
-{res}{txt}
-{com}. destring resource_use, replace force
-{txt}resource_use: contains nonnumeric characters; {res}replaced {txt}as {res}int
-{txt}(1 missing value generated)
-{res}{txt}
-{com}. 
 . // Define a completed variable (analogous to a failure indicator in survival analysis).
 . generate          completed = 1
 {txt}
@@ -208,6 +199,29 @@
 {com}. label    variable completed "Report completed?"
 {txt}
 {com}. drop OngoingYorN
+{txt}
+{com}. 
+. // Define the resource use variable.
+. tempvar resource
+{txt}
+{com}. rename ResourceUsePersonHours `resource'
+{res}{txt}
+{com}. destring `resource', replace force // One missing outcome. TODO: Note this in the report.
+{txt}__000005: contains nonnumeric characters; {res}replaced {txt}as {res}int
+{txt}(1 missing value generated)
+{res}{txt}
+{com}. generate log_resource1 = log(`resource')
+{txt}(1 missing value generated)
+
+{com}. generate log_resource2 = log(`resource')
+{txt}(1 missing value generated)
+
+{com}. replace  log_resource2 = . if !completed // For right-censored data.
+{txt}(3 real changes made, 3 to missing)
+
+{com}. label variable log_resource1 "Resource use (log person-hours)"
+{txt}
+{com}. label variable log_resource2 "Resource use (log person-hours); possibly censored"
 {txt}
 {com}. 
 . // Define commision date variable.
@@ -277,9 +291,68 @@
 {txt}end of do-file
 
 {com}. 
-. * // Do estimation.
-. * do estimation/estimate
+. // Do estimation.
+. do estimation/estimate
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. // TODO: Perform estimation.
 . 
+. // Specify the assumed endogeneous treatment assignment model.
+. // TODO: Check if synthesis_planned corresponds to pre-specification.
+. // TODO: nointeract is necessary to achieve convergence
+. local entreat rec_vs_none = i.field i.synthesis_planned , nointeract
+{txt}
+{com}. 
+. // Resource use: Mean relative number of person-hours used.
+. eintreg log_resource1 log_resource2 i.meta_analysis_planned , entreat(`entreat')
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-53.241989}  
+Iteration 1:{space 3}log likelihood = {res:-53.235178}  
+Iteration 2:{space 3}log likelihood = {res:-53.235122}  
+Iteration 3:{space 3}log likelihood = {res:-53.235122}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     14.71
+{txt}Log likelihood = {res}-53.235122{txt}{col 49}Prob > chi2{col 67}= {res}    0.0006
+
+{txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 14}meta_analysis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.28{col 60}{space 1}    3.46{col 69}{space 3} 0.00{col 77}{space 4}     0.43{col 90}{space 3}     1.54
+{txt}{space 35} {c |}
+{space 24}rec_vs_none {c |}
+{space 33}H  {c |}{col 37}{res}{space 2}    -1.50{col 49}{space 2}     0.79{col 60}{space 1}   -1.88{col 69}{space 3} 0.06{col 77}{space 4}    -3.05{col 90}{space 3}     0.06
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.06{col 49}{space 2}     0.32{col 60}{space 1}   18.97{col 69}{space 3} 0.00{col 77}{space 4}     5.43{col 90}{space 3}     6.68
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none                         {txt}{c |}
+{space 30}field {c |}
+{space 27}Welface  {c |}{col 37}{res}{space 2}    -1.52{col 49}{space 2}     0.65{col 60}{space 1}   -2.34{col 69}{space 3} 0.02{col 77}{space 4}    -2.80{col 90}{space 3}    -0.25
+{txt}{space 35} {c |}
+{space 18}synthesis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     1.20{col 49}{space 2}     0.67{col 60}{space 1}    1.79{col 69}{space 3} 0.07{col 77}{space 4}    -0.11{col 90}{space 3}     2.51
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none                        {txt}{c |}
+{space 31}cut1 {c |}{col 37}{res}{space 2}     0.27{col 49}{space 2}     0.44{col 77}{space 4}    -0.59{col 90}{space 3}     1.12
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.16{col 77}{space 4}     0.34{col 90}{space 3}     1.01
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.17{col 49}{space 2}     0.73{col 60}{space 1}    0.23{col 69}{space 3} 0.81{col 77}{space 4}    -0.86{col 90}{space 3}     0.93
+{txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. assert e(converged)
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. 
 . * // Make figures
 . * do figures/figures
 . 
@@ -296,4 +369,1409 @@
 . 
 {txt}end of do-file
 
+{com}. matrix list e(b)
+{res}
+{txt}e(b)[1,12]
+      log_resou~1:   log_resou~1:   log_resou~1:   log_resou~1:   log_resou~1:   rec_vs_none:   rec_vs_none:   rec_vs_none:   rec_vs_none:   /rec_vs_n~e:             /:             /:
+               0b.             1.            1b.             2.                           1b.             2.            0b.             1.                               corr(e.rec~e,
+     meta_analy~d   meta_analy~d    rec_vs_none    rec_vs_none          _cons          field          field   synthesis_~d   synthesis_~d           cut1  var(e.log_~1)  e.log_reso~1)
+y1 {res}             0      .98415118              0     -1.4962105      6.0563963              0     -1.5220489              0      1.1991461      .26779682       .5830038      .17132674
+{reset}
+{com}. nlcom exp(_b[rec_vs_none])
+
+{err}[rec_vs_none] not found
+{txt}{search r(111), local:r(111);}
+
+{com}. nlcom exp(_b[2.rec_vs_none])
+
+       {txt}_nl_1:  {res}exp(_b[2.rec_vs_none])
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.22{col 26}{space 2}     0.18{col 37}{space 1}    1.26{col 46}{space 3} 0.21{col 54}{space 4}    -0.12{col 67}{space 3}     0.57
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom exp(_b[log_resou~1:2.rec_vs_none])
+
+{err}equation log_resou~1 not found
+{txt}{search r(111), local:r(111);}
+
+{com}. nlcom exp(_b[log_resource1:2.rec_vs_none])
+
+       {txt}_nl_1:  {res}exp(_b[log_resource1:2.rec_vs_none])
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.22{col 26}{space 2}     0.18{col 37}{space 1}    1.26{col 46}{space 3} 0.21{col 54}{space 4}    -0.12{col 67}{space 3}     0.57
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. eintreg
+
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     14.71
+{txt}Log likelihood = {res}-53.235122{txt}{col 49}Prob > chi2{col 67}= {res}    0.0006
+
+{txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 14}meta_analysis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.28{col 60}{space 1}    3.46{col 69}{space 3} 0.00{col 77}{space 4}     0.43{col 90}{space 3}     1.54
+{txt}{space 35} {c |}
+{space 24}rec_vs_none {c |}
+{space 33}H  {c |}{col 37}{res}{space 2}    -1.50{col 49}{space 2}     0.79{col 60}{space 1}   -1.88{col 69}{space 3} 0.06{col 77}{space 4}    -3.05{col 90}{space 3}     0.06
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.06{col 49}{space 2}     0.32{col 60}{space 1}   18.97{col 69}{space 3} 0.00{col 77}{space 4}     5.43{col 90}{space 3}     6.68
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none                         {txt}{c |}
+{space 30}field {c |}
+{space 27}Welface  {c |}{col 37}{res}{space 2}    -1.52{col 49}{space 2}     0.65{col 60}{space 1}   -2.34{col 69}{space 3} 0.02{col 77}{space 4}    -2.80{col 90}{space 3}    -0.25
+{txt}{space 35} {c |}
+{space 18}synthesis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     1.20{col 49}{space 2}     0.67{col 60}{space 1}    1.79{col 69}{space 3} 0.07{col 77}{space 4}    -0.11{col 90}{space 3}     2.51
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none                        {txt}{c |}
+{space 31}cut1 {c |}{col 37}{res}{space 2}     0.27{col 49}{space 2}     0.44{col 77}{space 4}    -0.59{col 90}{space 3}     1.12
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.16{col 77}{space 4}     0.34{col 90}{space 3}     1.01
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.17{col 49}{space 2}     0.73{col 60}{space 1}    0.23{col 69}{space 3} 0.81{col 77}{space 4}    -0.86{col 90}{space 3}     0.93
+{txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. disp exp(-1.50)
+{res}.22313016
+
+{com}. disp exp(-3.05)
+{res}.04735892
+
+{com}. disp exp(0.06)
+{res}1.0618365
+
+{com}. generate x1 = exp(log_resource1)
+{txt}(1 missing value generated)
+
+{com}. generate x2 = exp(log_resource2)
+{txt}(4 missing values generated)
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-242.47246}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-242.10101}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-241.46495}  
+Iteration 3:{space 3}log likelihood = {res:-240.62105}  
+Iteration 4:{space 3}log likelihood = {res:-240.35092}  
+Iteration 5:{space 3}log likelihood = {res:-240.34318}  
+Iteration 6:{space 3}log likelihood = {res:-240.34314}  
+Iteration 7:{space 3}log likelihood = {res:-240.34314}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      8.67
+{txt}Log likelihood = {res}-240.34314{txt}{col 49}Prob > chi2{col 67}= {res}    0.0131
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   515.04{col 38}{space 2}   185.75{col 49}{space 1}    2.77{col 58}{space 3} 0.01{col 66}{space 4}   150.97{col 79}{space 3}   879.11
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   361.12{col 38}{space 2}   181.18{col 49}{space 1}    1.99{col 58}{space 3} 0.05{col 66}{space 4}     6.02{col 79}{space 3}   716.22
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   274.26{col 38}{space 2}   150.44{col 49}{space 1}    1.82{col 58}{space 3} 0.07{col 66}{space 4}   -20.60{col 79}{space 3}   569.12
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 19}field {c |}
+{space 16}Welface  {c |}{col 26}{res}{space 2}    -0.94{col 38}{space 2}     0.50{col 49}{space 1}   -1.88{col 58}{space 3} 0.06{col 66}{space 4}    -1.91{col 79}{space 3}     0.04
+{txt}{space 24} {c |}
+{space 7}synthesis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}     0.91{col 38}{space 2}     0.49{col 49}{space 1}    1.84{col 58}{space 3} 0.07{col 66}{space 4}    -0.06{col 79}{space 3}     1.88
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.44{col 38}{space 2}     0.30{col 66}{space 4}    -0.14{col 79}{space 3}     1.02
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}305228.30{col 38}{space 2}102201.61{col 66}{space 4}158347.56{col 79}{space 3}588353.35
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.95{col 38}{space 2}     0.05{col 49}{space 1}  -20.07{col 58}{space 3} 0.00{col 66}{space 4}    -0.99{col 79}{space 3}    -0.70
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. matrix list e(b)
+{res}
+{txt}e(b)[1,12]
+               x1:            x1:            x1:            x1:            x1:   rec_vs_none:   rec_vs_none:   rec_vs_none:   rec_vs_none:   /rec_vs_n~e:             /:             /:
+               0b.             1.            1b.             2.                           1b.             2.            0b.             1.                               corr(e.rec~e,
+     meta_analy~d   meta_analy~d    rec_vs_none    rec_vs_none          _cons          field          field   synthesis_~d   synthesis_~d           cut1      var(e.x1)          e.x1)
+y1 {res}             0      515.04098              0      361.11906      274.25917              0     -.93694842              0      .90846405      .44283642       305228.3     -.95156173
+{reset}
+{com}. nlcom _b[x1:2.rec_vs_none] / _b[x1:_cons]
+
+       {txt}_nl_1:  {res}_b[x1:2.rec_vs_none] / _b[x1:_cons]
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     1.32{col 26}{space 2}     1.24{col 37}{space 1}    1.06{col 46}{space 3} 0.29{col 54}{space 4}    -1.11{col 67}{space 3}     3.74
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom _b[x1:_cons] / _b[x1:2.rec_vs_none]
+
+       {txt}_nl_1:  {res}_b[x1:_cons] / _b[x1:2.rec_vs_none]
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.76{col 26}{space 2}     0.71{col 37}{space 1}    1.06{col 46}{space 3} 0.29{col 54}{space 4}    -0.64{col 67}{space 3}     2.16
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. eintreg log_resource1 log_resource2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-53.241989}  
+Iteration 1:{space 3}log likelihood = {res:-53.235178}  
+Iteration 2:{space 3}log likelihood = {res:-53.235122}  
+Iteration 3:{space 3}log likelihood = {res:-53.235122}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     14.71
+{txt}Log likelihood = {res}-53.235122{txt}{col 49}Prob > chi2{col 67}= {res}    0.0006
+
+{txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 14}meta_analysis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.28{col 60}{space 1}    3.46{col 69}{space 3} 0.00{col 77}{space 4}     0.43{col 90}{space 3}     1.54
+{txt}{space 35} {c |}
+{space 24}rec_vs_none {c |}
+{space 33}H  {c |}{col 37}{res}{space 2}    -1.50{col 49}{space 2}     0.79{col 60}{space 1}   -1.88{col 69}{space 3} 0.06{col 77}{space 4}    -3.05{col 90}{space 3}     0.06
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.06{col 49}{space 2}     0.32{col 60}{space 1}   18.97{col 69}{space 3} 0.00{col 77}{space 4}     5.43{col 90}{space 3}     6.68
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none                         {txt}{c |}
+{space 30}field {c |}
+{space 27}Welface  {c |}{col 37}{res}{space 2}    -1.52{col 49}{space 2}     0.65{col 60}{space 1}   -2.34{col 69}{space 3} 0.02{col 77}{space 4}    -2.80{col 90}{space 3}    -0.25
+{txt}{space 35} {c |}
+{space 18}synthesis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     1.20{col 49}{space 2}     0.67{col 60}{space 1}    1.79{col 69}{space 3} 0.07{col 77}{space 4}    -0.11{col 90}{space 3}     2.51
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none                        {txt}{c |}
+{space 31}cut1 {c |}{col 37}{res}{space 2}     0.27{col 49}{space 2}     0.44{col 77}{space 4}    -0.59{col 90}{space 3}     1.12
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.16{col 77}{space 4}     0.34{col 90}{space 3}     1.01
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.17{col 49}{space 2}     0.73{col 60}{space 1}    0.23{col 69}{space 3} 0.81{col 77}{space 4}    -0.86{col 90}{space 3}     0.93
+{txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom exp(_b[log_resource1:2.rec_vs_none])
+
+       {txt}_nl_1:  {res}exp(_b[log_resource1:2.rec_vs_none])
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.22{col 26}{space 2}     0.18{col 37}{space 1}    1.26{col 46}{space 3} 0.21{col 54}{space 4}    -0.12{col 67}{space 3}     0.57
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom exp(_b[log_resource1:2.rec_vs_none]) , df(1)
+
+       {txt}_nl_1:  {res}exp(_b[log_resource1:2.rec_vs_none])
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      t{col 46}   P>|t|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.22{col 26}{space 2}     0.18{col 37}{space 1}    1.26{col 46}{space 3} 0.43{col 54}{space 4}    -2.04{col 67}{space 3}     2.48
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom exp(_b[log_resource1:2.rec_vs_none]) , df(100)
+
+       {txt}_nl_1:  {res}exp(_b[log_resource1:2.rec_vs_none])
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      t{col 46}   P>|t|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.22{col 26}{space 2}     0.18{col 37}{space 1}    1.26{col 46}{space 3} 0.21{col 54}{space 4}    -0.13{col 67}{space 3}     0.58
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom exp(_b[log_resource1:2.rec_vs_none])
+
+       {txt}_nl_1:  {res}exp(_b[log_resource1:2.rec_vs_none])
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.22{col 26}{space 2}     0.18{col 37}{space 1}    1.26{col 46}{space 3} 0.21{col 54}{space 4}    -0.12{col 67}{space 3}     0.57
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. bysort rec_vs_none : summarize log_resource1 
+
+{txt}{hline}
+-> rec_vs_none = G
+
+    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+log_resour~1 {c |}{res}         21    6.427281    .6536258   5.192957   7.745003
+
+{txt}{hline}
+-> rec_vs_none = H
+
+    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
+
+{txt}{hline}
+-> rec_vs_none = .
+
+    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+log_resour~1 {c |}{res}          6    6.836831    .7515941   5.828946   7.728416
+
+
+{com}. disp 6.837 - 4.942
+{res}1.895
+
+{com}. disp exp(6.837 - 4.942)
+{res}6.6525484
+
+{com}. disp exp(4.942 - 6.837)
+{res}.15031834
+
+{com}. bysort rec_vs_none : summarize x1 
+
+{txt}{hline}
+-> rec_vs_none = G
+
+    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 10}x1 {c |}{res}         21    751.6191    499.3121        180       2310
+
+{txt}{hline}
+-> rec_vs_none = H
+
+    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 10}x1 {c |}{res}         11    290.7273    379.1367         25       1052
+
+{txt}{hline}
+-> rec_vs_none = .
+
+    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 10}x1 {c |}{res}          6      1162.5    798.7017        340       2272
+
+
+{com}. disp 751 / 290
+{res}2.5896552
+
+{com}. disp 290 / 751
+{res}.3861518
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-242.47246}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-242.10101}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-241.46495}  
+Iteration 3:{space 3}log likelihood = {res:-240.62105}  
+Iteration 4:{space 3}log likelihood = {res:-240.35092}  
+Iteration 5:{space 3}log likelihood = {res:-240.34318}  
+Iteration 6:{space 3}log likelihood = {res:-240.34314}  
+Iteration 7:{space 3}log likelihood = {res:-240.34314}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      8.67
+{txt}Log likelihood = {res}-240.34314{txt}{col 49}Prob > chi2{col 67}= {res}    0.0131
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   515.04{col 38}{space 2}   185.75{col 49}{space 1}    2.77{col 58}{space 3} 0.01{col 66}{space 4}   150.97{col 79}{space 3}   879.11
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   361.12{col 38}{space 2}   181.18{col 49}{space 1}    1.99{col 58}{space 3} 0.05{col 66}{space 4}     6.02{col 79}{space 3}   716.22
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   274.26{col 38}{space 2}   150.44{col 49}{space 1}    1.82{col 58}{space 3} 0.07{col 66}{space 4}   -20.60{col 79}{space 3}   569.12
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 19}field {c |}
+{space 16}Welface  {c |}{col 26}{res}{space 2}    -0.94{col 38}{space 2}     0.50{col 49}{space 1}   -1.88{col 58}{space 3} 0.06{col 66}{space 4}    -1.91{col 79}{space 3}     0.04
+{txt}{space 24} {c |}
+{space 7}synthesis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}     0.91{col 38}{space 2}     0.49{col 49}{space 1}    1.84{col 58}{space 3} 0.07{col 66}{space 4}    -0.06{col 79}{space 3}     1.88
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.44{col 38}{space 2}     0.30{col 66}{space 4}    -0.14{col 79}{space 3}     1.02
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}305228.30{col 38}{space 2}102201.61{col 66}{space 4}158347.56{col 79}{space 3}588353.35
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.95{col 38}{space 2}     0.05{col 49}{space 1}  -20.07{col 58}{space 3} 0.00{col 66}{space 4}    -0.99{col 79}{space 3}    -0.70
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. predict yyy
+{txt}(option {bf:mean} assumed; average structural function mean)
+{res}{txt}(6 missing values generated)
+{res}
+{com}. generate kkk = yyy - x1
+{txt}(7 missing values generated)
+
+{com}. hist kkk
+{txt}(bin={res}5{txt}, start={res}-1237.3544{txt}, width={res}389.79995{txt})
+(note: scheme white_background not found, using s2color)
+{res}
+{com}. kdensity kkk
+{txt}(n() set to 39)
+(note: scheme white_background not found, using s2color)
+{res}
+{com}. qnorm kkk
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. eintreg log_resource1 log_resource2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-53.241989}  
+Iteration 1:{space 3}log likelihood = {res:-53.235178}  
+Iteration 2:{space 3}log likelihood = {res:-53.235122}  
+Iteration 3:{space 3}log likelihood = {res:-53.235122}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     14.71
+{txt}Log likelihood = {res}-53.235122{txt}{col 49}Prob > chi2{col 67}= {res}    0.0006
+
+{txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 14}meta_analysis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.28{col 60}{space 1}    3.46{col 69}{space 3} 0.00{col 77}{space 4}     0.43{col 90}{space 3}     1.54
+{txt}{space 35} {c |}
+{space 24}rec_vs_none {c |}
+{space 33}H  {c |}{col 37}{res}{space 2}    -1.50{col 49}{space 2}     0.79{col 60}{space 1}   -1.88{col 69}{space 3} 0.06{col 77}{space 4}    -3.05{col 90}{space 3}     0.06
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.06{col 49}{space 2}     0.32{col 60}{space 1}   18.97{col 69}{space 3} 0.00{col 77}{space 4}     5.43{col 90}{space 3}     6.68
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none                         {txt}{c |}
+{space 30}field {c |}
+{space 27}Welface  {c |}{col 37}{res}{space 2}    -1.52{col 49}{space 2}     0.65{col 60}{space 1}   -2.34{col 69}{space 3} 0.02{col 77}{space 4}    -2.80{col 90}{space 3}    -0.25
+{txt}{space 35} {c |}
+{space 18}synthesis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     1.20{col 49}{space 2}     0.67{col 60}{space 1}    1.79{col 69}{space 3} 0.07{col 77}{space 4}    -0.11{col 90}{space 3}     2.51
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none                        {txt}{c |}
+{space 31}cut1 {c |}{col 37}{res}{space 2}     0.27{col 49}{space 2}     0.44{col 77}{space 4}    -0.59{col 90}{space 3}     1.12
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.16{col 77}{space 4}     0.34{col 90}{space 3}     1.01
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.17{col 49}{space 2}     0.73{col 60}{space 1}    0.23{col 69}{space 3} 0.81{col 77}{space 4}    -0.86{col 90}{space 3}     0.93
+{txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. predict yyy2
+{txt}(option {bf:mean} assumed; average structural function mean)
+{res}{txt}(6 missing values generated)
+{res}
+{com}. generate kkk2 = yyy2 - x1
+{txt}(7 missing values generated)
+
+{com}. qnorm kkk2
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. kdensity kkk2
+{txt}(n() set to 39)
+(note: scheme white_background not found, using s2color)
+{res}
+{com}. hist kkk2
+{txt}(bin={res}5{txt}, start={res}-2303.0422{txt}, width={res}456.52869{txt})
+(note: scheme white_background not found, using s2color)
+{res}
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-242.47246}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-242.10101}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-241.46495}  
+Iteration 3:{space 3}log likelihood = {res:-240.62105}  
+Iteration 4:{space 3}log likelihood = {res:-240.35092}  
+Iteration 5:{space 3}log likelihood = {res:-240.34318}  
+Iteration 6:{space 3}log likelihood = {res:-240.34314}  
+Iteration 7:{space 3}log likelihood = {res:-240.34314}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      8.67
+{txt}Log likelihood = {res}-240.34314{txt}{col 49}Prob > chi2{col 67}= {res}    0.0131
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   515.04{col 38}{space 2}   185.75{col 49}{space 1}    2.77{col 58}{space 3} 0.01{col 66}{space 4}   150.97{col 79}{space 3}   879.11
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   361.12{col 38}{space 2}   181.18{col 49}{space 1}    1.99{col 58}{space 3} 0.05{col 66}{space 4}     6.02{col 79}{space 3}   716.22
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   274.26{col 38}{space 2}   150.44{col 49}{space 1}    1.82{col 58}{space 3} 0.07{col 66}{space 4}   -20.60{col 79}{space 3}   569.12
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 19}field {c |}
+{space 16}Welface  {c |}{col 26}{res}{space 2}    -0.94{col 38}{space 2}     0.50{col 49}{space 1}   -1.88{col 58}{space 3} 0.06{col 66}{space 4}    -1.91{col 79}{space 3}     0.04
+{txt}{space 24} {c |}
+{space 7}synthesis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}     0.91{col 38}{space 2}     0.49{col 49}{space 1}    1.84{col 58}{space 3} 0.07{col 66}{space 4}    -0.06{col 79}{space 3}     1.88
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.44{col 38}{space 2}     0.30{col 66}{space 4}    -0.14{col 79}{space 3}     1.02
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}305228.30{col 38}{space 2}102201.61{col 66}{space 4}158347.56{col 79}{space 3}588353.35
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.95{col 38}{space 2}     0.05{col 49}{space 1}  -20.07{col 58}{space 3} 0.00{col 66}{space 4}    -0.99{col 79}{space 3}    -0.70
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom _b[x1:_cons] / _b[x1:2.rec_vs_none]
+
+       {txt}_nl_1:  {res}_b[x1:_cons] / _b[x1:2.rec_vs_none]
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.76{col 26}{space 2}     0.71{col 37}{space 1}    1.06{col 46}{space 3} 0.29{col 54}{space 4}    -0.64{col 67}{space 3}     2.16
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-247.28897}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-244.60589}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-243.21572}  
+Iteration 3:{space 3}log likelihood = {res:-242.93587}  
+Iteration 4:{space 3}log likelihood = {res:-242.85411}  
+Iteration 5:{space 3}log likelihood = {res:-242.85085}  
+Iteration 6:{space 3}log likelihood = {res:-242.85084}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     13.32
+{txt}Log likelihood = {res}-242.85084{txt}{col 49}Prob > chi2{col 67}= {res}    0.0013
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   554.81{col 38}{space 2}   176.08{col 49}{space 1}    3.15{col 58}{space 3} 0.00{col 66}{space 4}   209.70{col 79}{space 3}   899.92
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   475.02{col 38}{space 2}   190.48{col 49}{space 1}    2.49{col 58}{space 3} 0.01{col 66}{space 4}   101.69{col 79}{space 3}   848.35
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   220.05{col 38}{space 2}   148.97{col 49}{space 1}    1.48{col 58}{space 3} 0.14{col 66}{space 4}   -71.94{col 79}{space 3}   512.03
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 7}synthesis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}     0.26{col 38}{space 2}     0.40{col 49}{space 1}    0.66{col 58}{space 3} 0.51{col 66}{space 4}    -0.52{col 79}{space 3}     1.05
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.63{col 38}{space 2}     0.27{col 66}{space 4}     0.10{col 79}{space 3}     1.16
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}348227.98{col 38}{space 2}120290.31{col 66}{space 4}176940.97{col 79}{space 3}685328.68
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.95{col 38}{space 2}     0.05{col 49}{space 1}  -20.30{col 58}{space 3} 0.00{col 66}{space 4}    -0.99{col 79}{space 3}    -0.72
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. nlcom _b[x1:_cons] / _b[x1:2.rec_vs_none]
+
+       {txt}_nl_1:  {res}_b[x1:_cons] / _b[x1:2.rec_vs_none]
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.46{col 26}{space 2}     0.44{col 37}{space 1}    1.05{col 46}{space 3} 0.29{col 54}{space 4}    -0.40{col 67}{space 3}     1.33
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. swilk kkk
+
+                   {txt}Shapiro-Wilk W test for normal data
+
+    Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
+{hline 13}{c +}{hline 54}
+         kkk {c |} {res}        32    0.94750      1.751     1.163    0.12233
+
+{com}. swilk kkk2
+
+                   {txt}Shapiro-Wilk W test for normal data
+
+    Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
+{hline 13}{c +}{hline 54}
+        kkk2 {c |} {res}        32    0.88531      3.826     2.785    0.00267
+
+{com}. sfrancia kkk
+
+{txt}{col 19}Shapiro-Francia W' test for normal data
+
+    Variable {c |}       Obs{col 32}W'{col 44}V'{col 54}z       Prob>z
+{hline 13}{c +}{hline 53}
+         kkk {c |}{res}        32    0.93904      2.256     1.496    0.06732
+
+{com}. sfrancia kkk2
+
+{txt}{col 19}Shapiro-Francia W' test for normal data
+
+    Variable {c |}       Obs{col 32}W'{col 44}V'{col 54}z       Prob>z
+{hline 13}{c +}{hline 53}
+        kkk2 {c |}{res}        32    0.88089      4.408     2.728    0.00319
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-242.47246}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-242.10101}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-241.46495}  
+Iteration 3:{space 3}log likelihood = {res:-240.62105}  
+Iteration 4:{space 3}log likelihood = {res:-240.35092}  
+Iteration 5:{space 3}log likelihood = {res:-240.34318}  
+Iteration 6:{space 3}log likelihood = {res:-240.34314}  
+Iteration 7:{space 3}log likelihood = {res:-240.34314}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      8.67
+{txt}Log likelihood = {res}-240.34314{txt}{col 49}Prob > chi2{col 67}= {res}    0.0131
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   515.04{col 38}{space 2}   185.75{col 49}{space 1}    2.77{col 58}{space 3} 0.01{col 66}{space 4}   150.97{col 79}{space 3}   879.11
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   361.12{col 38}{space 2}   181.18{col 49}{space 1}    1.99{col 58}{space 3} 0.05{col 66}{space 4}     6.02{col 79}{space 3}   716.22
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   274.26{col 38}{space 2}   150.44{col 49}{space 1}    1.82{col 58}{space 3} 0.07{col 66}{space 4}   -20.60{col 79}{space 3}   569.12
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 19}field {c |}
+{space 16}Welface  {c |}{col 26}{res}{space 2}    -0.94{col 38}{space 2}     0.50{col 49}{space 1}   -1.88{col 58}{space 3} 0.06{col 66}{space 4}    -1.91{col 79}{space 3}     0.04
+{txt}{space 24} {c |}
+{space 7}synthesis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}     0.91{col 38}{space 2}     0.49{col 49}{space 1}    1.84{col 58}{space 3} 0.07{col 66}{space 4}    -0.06{col 79}{space 3}     1.88
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.44{col 38}{space 2}     0.30{col 66}{space 4}    -0.14{col 79}{space 3}     1.02
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}305228.30{col 38}{space 2}102201.61{col 66}{space 4}158347.56{col 79}{space 3}588353.35
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.95{col 38}{space 2}     0.05{col 49}{space 1}  -20.07{col 58}{space 3} 0.00{col 66}{space 4}    -0.99{col 79}{space 3}    -0.70
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.field , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-244.65667}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-244.25262}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-243.23214}  
+Iteration 3:{space 3}log likelihood = {res:-241.88013}  
+Iteration 4:{space 3}log likelihood = {res:-241.71636}  
+Iteration 5:{space 3}log likelihood = {res:-241.70758}  
+Iteration 6:{space 3}log likelihood = {res: -241.7075}  
+Iteration 7:{space 3}log likelihood = {res: -241.7075}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      4.90
+{txt}Log likelihood = {res} -241.7075{txt}{col 49}Prob > chi2{col 67}= {res}    0.0862
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   397.39{col 38}{space 2}   202.88{col 49}{space 1}    1.96{col 58}{space 3} 0.05{col 66}{space 4}    -0.25{col 79}{space 3}   795.03
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   491.79{col 38}{space 2}   242.29{col 49}{space 1}    2.03{col 58}{space 3} 0.04{col 66}{space 4}    16.91{col 79}{space 3}   966.66
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   278.94{col 38}{space 2}   182.71{col 49}{space 1}    1.53{col 58}{space 3} 0.13{col 66}{space 4}   -79.17{col 79}{space 3}   637.05
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 19}field {c |}
+{space 16}Welface  {c |}{col 26}{res}{space 2}    -0.47{col 38}{space 2}     0.28{col 49}{space 1}   -1.65{col 58}{space 3} 0.10{col 66}{space 4}    -1.02{col 79}{space 3}     0.09
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.31{col 38}{space 2}     0.30{col 66}{space 4}    -0.28{col 79}{space 3}     0.90
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}365724.79{col 38}{space 2}134430.72{col 66}{space 4}177940.71{col 79}{space 3}751680.85
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.98{col 38}{space 2}     0.04{col 49}{space 1}  -23.22{col 58}{space 3} 0.00{col 66}{space 4}    -1.00{col 79}{space 3}    -0.46
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none, nointeract)
+{err}{p 0 4 2}could not calculate 
+initial values; try specifying 
+{bf:from()}{p_end}
+{txt}{search r(503), local:r(503);}
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-242.47246}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-242.10101}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-241.46495}  
+Iteration 3:{space 3}log likelihood = {res:-240.62105}  
+Iteration 4:{space 3}log likelihood = {res:-240.35092}  
+Iteration 5:{space 3}log likelihood = {res:-240.34318}  
+Iteration 6:{space 3}log likelihood = {res:-240.34314}  
+Iteration 7:{space 3}log likelihood = {res:-240.34314}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      8.67
+{txt}Log likelihood = {res}-240.34314{txt}{col 49}Prob > chi2{col 67}= {res}    0.0131
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   515.04{col 38}{space 2}   185.75{col 49}{space 1}    2.77{col 58}{space 3} 0.01{col 66}{space 4}   150.97{col 79}{space 3}   879.11
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   361.12{col 38}{space 2}   181.18{col 49}{space 1}    1.99{col 58}{space 3} 0.05{col 66}{space 4}     6.02{col 79}{space 3}   716.22
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   274.26{col 38}{space 2}   150.44{col 49}{space 1}    1.82{col 58}{space 3} 0.07{col 66}{space 4}   -20.60{col 79}{space 3}   569.12
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 19}field {c |}
+{space 16}Welface  {c |}{col 26}{res}{space 2}    -0.94{col 38}{space 2}     0.50{col 49}{space 1}   -1.88{col 58}{space 3} 0.06{col 66}{space 4}    -1.91{col 79}{space 3}     0.04
+{txt}{space 24} {c |}
+{space 7}synthesis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}     0.91{col 38}{space 2}     0.49{col 49}{space 1}    1.84{col 58}{space 3} 0.07{col 66}{space 4}    -0.06{col 79}{space 3}     1.88
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.44{col 38}{space 2}     0.30{col 66}{space 4}    -0.14{col 79}{space 3}     1.02
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}305228.30{col 38}{space 2}102201.61{col 66}{space 4}158347.56{col 79}{space 3}588353.35
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.95{col 38}{space 2}     0.05{col 49}{space 1}  -20.07{col 58}{space 3} 0.00{col 66}{space 4}    -0.99{col 79}{space 3}    -0.70
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. test 1.rec_vs_none
+
+{p 0 7}{space 1}{text:( 1)}{space 1} {res}[x1]1b.rec_vs_none = 0{p_end}
+{txt}       Constraint 1 dropped
+
+{col 12}chi2(  0) ={res}       .
+{txt}{col 10}Prob > chi2 =  {res}       .
+
+{com}. test rec_vs_none
+{bf}{err}rec_vs_none{sf} not found
+{txt}{search r(111), local:r(111);}
+
+{com}. matrix list e(b)
+{res}
+{txt}e(b)[1,12]
+               x1:            x1:            x1:            x1:            x1:   rec_vs_none:   rec_vs_none:   rec_vs_none:   rec_vs_none:   /rec_vs_n~e:             /:             /:
+               0b.             1.            1b.             2.                           1b.             2.            0b.             1.                               corr(e.rec~e,
+     meta_analy~d   meta_analy~d    rec_vs_none    rec_vs_none          _cons          field          field   synthesis_~d   synthesis_~d           cut1      var(e.x1)          e.x1)
+y1 {res}             0      515.04098              0      361.11906      274.25917              0     -.93694842              0      .90846405      .44283642       305228.3     -.95156173
+{reset}
+{com}. test 2.rec_vs_none
+
+{p 0 7}{space 1}{text:( 1)}{space 1} {res}[x1]2.rec_vs_none = 0{p_end}
+
+{txt}{col 12}chi2(  1) ={res}    3.97
+{txt}{col 10}Prob > chi2 =  {res}  0.0462
+
+{com}. sts graph , by(rec_vs_none)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts test , by(rec_vs_none)
+{err}varlist required
+{txt}{search r(100), local:r(100);}
+
+{com}. sts test rec_vs_none
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+
+
+{txt}{title:Log-rank test for equality of survivor functions}
+
+{col 12} {c |}   Events         Events
+rec_vs_none {c |}  observed       expected
+{hline 12}{c +}{hline 25}
+G           {c |}{res}        18          19.92
+{txt}H           {c |}{res}        12          10.08
+{txt}{hline 12}{c +}{hline 25}
+Total       {c |}{res}        30          30.00
+
+                  {txt}chi2(1) = {res}      0.62
+                  {txt}Pr>chi2 = {res}    0.4293
+
+{com}. sts test , by(rec_vs_none) ci
+{err}varlist required
+{txt}{search r(100), local:r(100);}
+
+{com}. sts graph , by(rec_vs_none) ci
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci adjustfor(meta_analysis_planned)
+{err}options adjustfor() and ci may not be combined
+{txt}{search r(198), local:r(198);}
+
+{com}. sts graph , by(rec_vs_none) adjustfor(meta_analysis_planned)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci byopts(colfirst)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. bysort rec_vs_none: sts graph ,  ci
+{err}sts may not be combined with by
+{txt}{search r(190), local:r(190);}
+
+{com}. sts graph , by(rec_vs_none) ci over(colfirst)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{err}option {bf:over()} not allowed
+{txt}{search r(198), local:r(198);}
+
+{com}. eintreg x1 x2 i.meta_analysis_planned , entreat(rec_vs_none = i.field i.synthesis_planned , nointeract)
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-242.47246}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-242.10101}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-241.46495}  
+Iteration 3:{space 3}log likelihood = {res:-240.62105}  
+Iteration 4:{space 3}log likelihood = {res:-240.35092}  
+Iteration 5:{space 3}log likelihood = {res:-240.34318}  
+Iteration 6:{space 3}log likelihood = {res:-240.34314}  
+Iteration 7:{space 3}log likelihood = {res:-240.34314}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      8.67
+{txt}Log likelihood = {res}-240.34314{txt}{col 49}Prob > chi2{col 67}= {res}    0.0131
+
+{txt}{hline 25}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 26}{c |}      Coef.{col 38}   Std. Err.{col 50}      z{col 58}   P>|z|{col 66}     [95% Con{col 79}f. Interval]
+{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}meta_analysis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}   515.04{col 38}{space 2}   185.75{col 49}{space 1}    2.77{col 58}{space 3} 0.01{col 66}{space 4}   150.97{col 79}{space 3}   879.11
+{txt}{space 24} {c |}
+{space 13}rec_vs_none {c |}
+{space 22}H  {c |}{col 26}{res}{space 2}   361.12{col 38}{space 2}   181.18{col 49}{space 1}    1.99{col 58}{space 3} 0.05{col 66}{space 4}     6.02{col 79}{space 3}   716.22
+{txt}{space 19}_cons {c |}{col 26}{res}{space 2}   274.26{col 38}{space 2}   150.44{col 49}{space 1}    1.82{col 58}{space 3} 0.07{col 66}{space 4}   -20.60{col 79}{space 3}   569.12
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none              {txt}{c |}
+{space 19}field {c |}
+{space 16}Welface  {c |}{col 26}{res}{space 2}    -0.94{col 38}{space 2}     0.50{col 49}{space 1}   -1.88{col 58}{space 3} 0.06{col 66}{space 4}    -1.91{col 79}{space 3}     0.04
+{txt}{space 24} {c |}
+{space 7}synthesis_planned {c |}
+{space 20}Yes  {c |}{col 26}{res}{space 2}     0.91{col 38}{space 2}     0.49{col 49}{space 1}    1.84{col 58}{space 3} 0.07{col 66}{space 4}    -0.06{col 79}{space 3}     1.88
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none             {txt}{c |}
+{space 20}cut1 {c |}{col 26}{res}{space 2}     0.44{col 38}{space 2}     0.30{col 66}{space 4}    -0.14{col 79}{space 3}     1.02
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.x1){c |}{col 26}{res}{space 2}305228.30{col 38}{space 2}102201.61{col 66}{space 4}158347.56{col 79}{space 3}588353.35
+{txt}{hline 25}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.x1){c |}{col 26}{res}{space 2}    -0.95{col 38}{space 2}     0.05{col 49}{space 1}  -20.07{col 58}{space 3} 0.00{col 66}{space 4}    -0.99{col 79}{space 3}    -0.70
+{txt}{hline 25}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. stcurve
+{err}last estimates not found
+{txt}{search r(301), local:r(301);}
+
+{com}. sts graph , by(rec_vs_none) ci
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci fintensity(inten10)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{err}option {bf:fintensity()} not allowed
+{txt}{search r(198), local:r(198);}
+
+{com}. sts graph , by(rec_vs_none) ci atrisk
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(single)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fintensity(inten10))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fintensity(inten50))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fcolor(color(%10)))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{err}option(s) color(%10) not allowed
+{txt}{search r(198), local:r(198);}
+
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fcolor(%10))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fcolor(%20))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fcolor(%80))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fcolor(blue%80))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fcolor(blue%80)) ciopts(fcolor(red%80)) 
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{err}option {bf:ciopts()} not allowed
+{txt}{search r(198), local:r(198);}
+
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ciopts(fcolor(blue%80 red%80))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{res}{txt}(note: scheme white_background not found, using s2color)
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{p 0 4 2}
+{txt}(note:  named style
+blue % 80 red % 80 not found in class
+color,  default attributes used)
+{p_end}
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number)
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. {res}{com}sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(%80))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(%80)) ci2opts(fcolor(%80))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(color(%80)) ci2opts(color(%80))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fintensity(inten20)) ci2opts(fintensity(inten20))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(red%80)) ci2opts(fcolor(blue%80))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(red%20)) ci2opts(fcolor(blue%20))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(blue%20)) ci2opts(fcolor(red%20))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(blue%30)) ci2opts(fcolor(red%30))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(%30)) ci2opts(fcolor(%30))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(gs6%30)) ci2opts(fcolor(navy%30))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%30)) ci2opts(fcolor(maroon%30))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%20)) ci2opts(fcolor(maroon%20))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%10)) ci2opts(fcolor(maroon%10))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts test , by(rec_vs_none)
+{err}varlist required
+{txt}{search r(100), local:r(100);}
+
+{com}. sts test rec_vs_none
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+
+
+{txt}{title:Log-rank test for equality of survivor functions}
+
+{col 12} {c |}   Events         Events
+rec_vs_none {c |}  observed       expected
+{hline 12}{c +}{hline 25}
+G           {c |}{res}        18          19.92
+{txt}H           {c |}{res}        12          10.08
+{txt}{hline 12}{c +}{hline 25}
+Total       {c |}{res}        30          30.00
+
+                  {txt}chi2(1) = {res}      0.62
+                  {txt}Pr>chi2 = {res}    0.4293
+
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%10)) ci2opts(fcolor(maroon%10))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
+{com}. sts set
+{err}unknown sts subcommand set
+{txt}{search r(198), local:r(198);}
+
+{com}. stset
+{txt}-> stset completion, failure(completed) origin(time commission) scale(7)
+
+     failure event:  {res}completed != 0 & completed < .
+{txt}obs. time interval:  {res}(origin, completion]
+{txt} exit on or before:  {res}failure
+    {txt}t for analysis:  {res}(time-origin)/7
+            {txt}origin:  {res}time commission
+
+{txt}{hline 78}
+{res}         39{txt}  total observations
+{res}          1{txt}  observation ends on or before enter()
+{hline 78}
+{res}         38{txt}  observations remaining, representing
+{res}         35{txt}  failures in single-record/single-failure data
+{res}      1,200{txt}  total analysis time at risk and under observation
+                                                at risk from t = {res}        0
+                                     {txt}earliest observed entry t = {res}        0
+                                          {txt}last observed exit t = {res} 101.8571
+
+{com}. sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%10)) ci2opts(fcolor(maroon%10))
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(note: scheme white_background not found, using s2color)
+{res}{txt}(note: scheme white_background not found, using s2color)
+{res}
 {com}. 

@@ -14,8 +14,8 @@ do setup/setup
 // Import and process the data.
 do data/data
 
-* // Do estimation.
-* do estimation/estimate
+// Do estimation.
+do estimation/estimate
 
 * // Make figures
 * do figures/figures
