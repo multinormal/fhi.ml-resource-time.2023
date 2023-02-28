@@ -10,30 +10,20 @@ local p_fmt  %5.2f // Format used for P-values.
 local e_fmt  %5.2f // Format used for estimates.
 local pc_fmt %8.1f // Format used for percentages.
 
-local tbl_num = 0  // A table counter.
-
 // Start the document.
 putdocx begin
 
 // Title.
 putdocx paragraph, style(Title)
-putdocx text ("TODO: Trial Name")
+putdocx text ("The effect of machine learning tools for evidence synthesis on resource use and time-to-completion")
 
 // Author and revision information.
 `newpara'
-TODO: Name and institution
+Chris Rose, Norwegian Institute of Public Health 
 (<<dd_docx_display: c(current_date)>>)
 putdocx textblock end
 `newpara'
 Generated using git revision: <<dd_docx_display: "${git_revision}">>
-putdocx textblock end
-
-// Introduction section.
-`heading'
-putdocx text ("Introduction")
-
-`newpara'
-This document presents methods and results for the TODO trial.
 putdocx textblock end
 
 // Methods section
@@ -41,7 +31,22 @@ putdocx textblock end
 putdocx text ("Methods")
 
 `newpara'
-TODO: Write methods text.
+Analyses were performed as specified in the protocol using Stata 16 (StataCorp LLC, College 
+Station, Texas, USA). Briefly, we analyzed resource use (person-hours) on the log scale 
+using extended interval regression (eintreg) and used a likelihood-adjusted-censoring 
+inverse-probability-weighted regression adjustment (LAC-IPWRA; stteffects) model to estimate mean 
+difference in time-to-completion. All analyses accounted for right-censored outcomes (ongoing reviews) 
+and for nonrandom endogenous treatment allocation, which was modelled in terms of review field (welfare 
+or healthcare) and whether any evidence synthesis (quantitative or qualitative) was planned. We 
+re-expressed the estimates as ratios (relative resource use and relative time-to-completion) to aid 
+generalization to other institutions. We present two-sided 95% confidence intervals and p-values 
+where appropriate and interpret p-values less than 0.05 to be statistically significant. We also 
+present the time-to-completion data using Kaplan-Meier estimates of survivor functions. We updated 
+the preprint version of the protocol during data extraction but before starting the analysis or unblinding the 
+statistician (CJR) to redefine the comparisons in terms of under- and overuse of machine learning 
+(TODO: Cite revision). However, only two reviews were judged to have under- or overused machine 
+learning, so it was not possible to perform the revised analyses. We therefore performed and report 
+the analyses as originally planned.
 putdocx textblock end
 
 // Results section
