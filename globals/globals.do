@@ -9,6 +9,12 @@ global random_seed 1234
 
 global report_filename "products/report.docx"
 
+// Define the comparisons.
+global comparisons rec_vs_none
+
+// Define the outcomes.
+global outcomes resource time
+
 // Define the outcome variables.
 global resource_outcome log_resource1 log_resource2 // TODO: Change to non-log!
 // Note: No need to specify outcomes for stset data.
@@ -18,4 +24,4 @@ global adj_var i.meta_analysis_planned
 
 // Specify the model for endogeneous treatment assignment.
 // TODO: Check if synthesis_planned corresponds to pre-specification.
-global entreat rec_vs_none = i.field i.synthesis_planned , nointeract
+global endo_vars i.field i.synthesis_planned
