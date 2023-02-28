@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}28 Feb 2023, 11:18:52
+ {txt}opened on:  {res}28 Feb 2023, 11:31:32
 {txt}
 {com}. 
 . // Set up globals.
@@ -338,10 +338,19 @@
 {com}. 
 . // Perform estimation.
 . foreach analysis of global analyses {c -(}
-{txt}  2{com}.   ${c -(}`analysis'_model{c )-}
+{txt}  2{com}.   // Perform estimation and store the estimates.
+.   ${c -(}`analysis'_model{c )-}
 {txt}  3{com}.   assert e(converged)
 {txt}  4{com}.   estimates store `analysis'
-{txt}  5{com}. {c )-}
+{txt}  5{com}. 
+.   // Compute residuals (for completed reviews, i.e., uncensored observations).
+.   tempvar y_hat
+{txt}  6{com}.   predict `y_hat'
+{txt}  7{com}.   local y : word 1 of `e(depvar)'
+{txt}  8{com}.   generate resid_`analysis' = `y' - `y_hat' if completed
+{txt}  9{com}.   swilk resid_`analysis'
+{txt} 10{com}.   assert r(p) > 0.05
+{txt} 11{com}. {c )-}
 {res}
 {txt}Iteration 0:{space 3}log likelihood = {res:-53.241989}  
 Iteration 1:{space 3}log likelihood = {res:-53.235178}  
@@ -381,7 +390,16 @@ Iteration 3:{space 3}log likelihood = {res:-53.235122}
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.17{col 49}{space 2}     0.73{col 60}{space 1}    0.23{col 69}{space 3} 0.81{col 77}{space 4}    -0.86{col 90}{space 3}     0.93
 {txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+(option {bf:mean} assumed; average structural function mean)
+{res}{txt}(6 missing values generated)
+{res}{txt}(9 missing values generated)
 
+                   Shapiro-Wilk W test for normal data
+
+    Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
+{hline 13}{c +}{hline 54}
+resid_rec_~e {c |} {res}        30    0.98043      0.622    -0.982    0.83688
+{txt}
 {com}. 
 . // TODO: Based on a comparison of histograms of residuals, QQ plots, and Shapiro-Wilk and Shapiro-Francia tests,
 . // TODO: we should model resource use on the
@@ -409,53 +427,5 @@ Iteration 3:{space 3}log likelihood = {res:-53.235122}
 . * do reports/report
 . 
 {txt}end of do-file
-
-{com}. est dir
-
-{txt}{hline 13}{c TT}{hline 61}
-        name {c |} command      depvar       npar  title 
-{hline 13}{c +}{hline 61}
-{ralign 12:{stata estimates replay rec_vs_none_resource:rec_vs_non~e}}{col 14}{txt:{c |}}{res}{col 16}{lalign 12:eintreg}{col 29}{lalign 12:mult. depvar}{col 42}  12{col 48}{it:Extended interval regression}
-{txt}{hline 13}{c BT}{hline 61}
-
-{com}. estimates replay rec_vs_none_resource
-
-{txt}{hline}
-{p 0 8}Model {hi:rec_vs_none_resource}{p_end}
-{hline}
-
-Extended interval regression{col 49}Number of obs{col 67}= {res}        32
-{txt}{col 49}   Uncensored{col 67}= {res}        30
-{txt}{col 49}   Left-censored{col 67}= {res}         0
-{txt}{col 49}   Right-censored{col 67}= {res}         2
-{txt}{col 49}   Interval-cens.{col 67}= {res}         0
-
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     14.71
-{txt}Log likelihood = {res}-53.235122{txt}{col 49}Prob > chi2{col 67}= {res}    0.0006
-
-{txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
-{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 14}meta_analysis_planned {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.28{col 60}{space 1}    3.46{col 69}{space 3} 0.00{col 77}{space 4}     0.43{col 90}{space 3}     1.54
-{txt}{space 35} {c |}
-{space 24}rec_vs_none {c |}
-{space 33}H  {c |}{col 37}{res}{space 2}    -1.50{col 49}{space 2}     0.79{col 60}{space 1}   -1.88{col 69}{space 3} 0.06{col 77}{space 4}    -3.05{col 90}{space 3}     0.06
-{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.06{col 49}{space 2}     0.32{col 60}{space 1}   18.97{col 69}{space 3} 0.00{col 77}{space 4}     5.43{col 90}{space 3}     6.68
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}rec_vs_none                         {txt}{c |}
-{space 30}field {c |}
-{space 27}Welface  {c |}{col 37}{res}{space 2}    -1.52{col 49}{space 2}     0.65{col 60}{space 1}   -2.34{col 69}{space 3} 0.02{col 77}{space 4}    -2.80{col 90}{space 3}    -0.25
-{txt}{space 35} {c |}
-{space 18}synthesis_planned {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}     1.20{col 49}{space 2}     0.67{col 60}{space 1}    1.79{col 69}{space 3} 0.07{col 77}{space 4}    -0.11{col 90}{space 3}     2.51
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}/rec_vs_none                        {txt}{c |}
-{space 31}cut1 {c |}{col 37}{res}{space 2}     0.27{col 49}{space 2}     0.44{col 77}{space 4}    -0.59{col 90}{space 3}     1.12
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.16{col 77}{space 4}     0.34{col 90}{space 3}     1.01
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.17{col 49}{space 2}     0.73{col 60}{space 1}    0.23{col 69}{space 3} 0.81{col 77}{space 4}    -0.86{col 90}{space 3}     0.93
-{txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 
 {com}. 
