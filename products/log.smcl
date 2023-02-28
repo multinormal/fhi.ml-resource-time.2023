@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}28 Feb 2023, 11:31:32
+ {txt}opened on:  {res}28 Feb 2023, 11:34:47
 {txt}
 {com}. 
 . // Set up globals.
@@ -343,14 +343,16 @@
 {txt}  3{com}.   assert e(converged)
 {txt}  4{com}.   estimates store `analysis'
 {txt}  5{com}. 
-.   // Compute residuals (for completed reviews, i.e., uncensored observations).
-.   tempvar y_hat
-{txt}  6{com}.   predict `y_hat'
-{txt}  7{com}.   local y : word 1 of `e(depvar)'
-{txt}  8{com}.   generate resid_`analysis' = `y' - `y_hat' if completed
-{txt}  9{com}.   swilk resid_`analysis'
-{txt} 10{com}.   assert r(p) > 0.05
-{txt} 11{com}. {c )-}
+.   // Compute and test residuals for normality for eintreg.
+.   if "`e(cmd)'" == "eintreg" {c -(}
+{txt}  6{com}.     tempvar y_hat resid
+{txt}  7{com}.     predict `y_hat'
+{txt}  8{com}.     local y : word 1 of `e(depvar)'
+{txt}  9{com}.     generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
+{txt} 10{com}.     swilk `resid'
+{txt} 11{com}.     assert r(p) > 0.05
+{txt} 12{com}.   {c )-}
+{txt} 13{com}. {c )-}
 {res}
 {txt}Iteration 0:{space 3}log likelihood = {res:-53.241989}  
 Iteration 1:{space 3}log likelihood = {res:-53.235178}  
@@ -398,7 +400,7 @@ Iteration 3:{space 3}log likelihood = {res:-53.235122}
 
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
-resid_rec_~e {c |} {res}        30    0.98043      0.622    -0.982    0.83688
+    __000001 {c |} {res}        30    0.98043      0.622    -0.982    0.83688
 {txt}
 {com}. 
 . // TODO: Based on a comparison of histograms of residuals, QQ plots, and Shapiro-Wilk and Shapiro-Francia tests,

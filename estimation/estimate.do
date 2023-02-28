@@ -7,13 +7,15 @@ foreach analysis of global analyses {
   assert e(converged)
   estimates store `analysis'
 
-  // Compute residuals (for completed reviews, i.e., uncensored observations).
-  tempvar y_hat
-  predict `y_hat'
-  local y : word 1 of `e(depvar)'
-  generate resid_`analysis' = `y' - `y_hat' if completed
-  swilk resid_`analysis'
-  assert r(p) > 0.05
+  // Compute and test residuals for normality for eintreg.
+  if "`e(cmd)'" == "eintreg" {
+    tempvar y_hat resid
+    predict `y_hat'
+    local y : word 1 of `e(depvar)'
+    generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
+    swilk `resid'
+    assert r(p) > 0.05
+  }
 }
 
 // TODO: Based on a comparison of histograms of residuals, QQ plots, and Shapiro-Wilk and Shapiro-Francia tests,
