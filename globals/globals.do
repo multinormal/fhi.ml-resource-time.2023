@@ -9,8 +9,10 @@ global random_seed 1234
 
 global report_filename "products/report.docx"
 
-// Define the comparisons.
-global comparisons rec_vs_none rec_vs_nonrec any_vs_none
+// Define the comparisons specified in the protocol published in the journal.
+global comparisons rec_vs_none rec_vs_nonrec any_vs_none 
+// TODO: Report that we are dropping recommended versus over- underuse comparisons
+// TODO: (i.e., those specified in the revised preprint), as only 2 observations in one of the groups for each of these.
 
 // Define the outcomes.
 global outcomes resource time
