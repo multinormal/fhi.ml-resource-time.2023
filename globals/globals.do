@@ -10,7 +10,7 @@ global random_seed 1234
 global report_filename "products/report.docx"
 
 // Define the comparisons.
-global comparisons rec_vs_none rec_vs_nonrec
+global comparisons rec_vs_none rec_vs_nonrec any_vs_none
 
 // Define the outcomes.
 global outcomes resource time
