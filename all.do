@@ -7,6 +7,8 @@ log using products/log.smcl, name("ML noML") replace
 
 // Set up globals.
 do globals/globals
+do globals/analyses
+do globals/models
 
 // Set up Stata.
 do setup/setup

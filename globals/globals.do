@@ -8,3 +8,14 @@ global signature "39:28(17933):3819763061:1092073612"
 global random_seed 1234
 
 global report_filename "products/report.docx"
+
+// Define the outcome variables.
+global resource_outcome log_resource1 log_resource2 // TODO: Change to non-log!
+// Note: No need to specify outcomes for stset data.
+
+// Define fixed effect covariate.
+global adj_var i.meta_analysis_planned
+
+// Specify the model for endogeneous treatment assignment.
+// TODO: Check if synthesis_planned corresponds to pre-specification.
+global entreat rec_vs_none = i.field i.synthesis_planned , nointeract

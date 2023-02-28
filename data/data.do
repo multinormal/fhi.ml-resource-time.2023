@@ -104,6 +104,7 @@ generate completion = date(`completion', "DMY")
 tempvar max
 egen `max' = max(completion)
 replace completion = `max' if missing(completion)
+// TODO: Replace max with the date of the last day of data collection.
 
 // stset the data.
 stset completion , failure(completed) origin(time commission) scale(7 /*days*/)

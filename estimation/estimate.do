@@ -1,15 +1,11 @@
 version 16.1
 
-// TODO: Perform estimation.
-
-// Specify the assumed endogeneous treatment assignment model.
-// TODO: Check if synthesis_planned corresponds to pre-specification.
-// TODO: nointeract is necessary to achieve convergence
-local entreat rec_vs_none = i.field i.synthesis_planned , nointeract
-
-// Resource use: Mean relative number of person-hours used.
-eintreg log_resource1 log_resource2 i.meta_analysis_planned , entreat(`entreat')
-assert e(converged)
+// Perform estimation.
+foreach analysis of global analyses {
+  ${`analysis'_model}
+  assert e(converged)
+  estimates store `analysis'
+}
 
 // TODO: Based on a comparison of histograms of residuals, QQ plots, and Shapiro-Wilk and Shapiro-Francia tests,
 // TODO: we should model resource use on the
