@@ -1,20 +1,22 @@
 version 16.1
 
 // Perform estimation.
-foreach analysis of global analyses {
-  // Perform estimation and store the estimates.
-  ${`analysis'_model}
-  assert e(converged)
-  estimates store `analysis'
+foreach comparison of global comparisons {
+  foreach outcome of global outcomes {
+    // Perform estimation and store the estimates.
+    ${`comparison'_`outcome'_model}
+    assert e(converged)
+    estimates store `comparison'_`outcome'
 
-  // Compute and test residuals for normality for eintreg.
-  if "`e(cmd)'" == "eintreg" {
-    tempvar y_hat resid
-    predict `y_hat'
-    local y : word 1 of `e(depvar)'
-    generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
-    swilk `resid'
-    assert r(p) > 0.05
+    // Compute and test residuals for normality for eintreg.
+    if "`e(cmd)'" == "eintreg" {
+      tempvar y_hat resid
+      predict `y_hat'
+      local y : word 1 of `e(depvar)'
+      generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
+      swilk `resid'
+      assert r(p) > 0.05
+    }
   }
 }
 
