@@ -3,6 +3,9 @@ version 16.1
 // Perform estimation.
 foreach comparison of global comparisons {
   foreach outcome of global outcomes {
+    disp "{hline}"
+    disp as result "Analysis for: {ul:`comparison'} with respect to {ul:`outcome'}"
+
     // Perform estimation and store the estimates.
     ${`comparison'_`outcome'_model}
     assert e(converged)
