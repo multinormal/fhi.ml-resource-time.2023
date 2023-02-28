@@ -7,6 +7,8 @@ log using products/log.smcl, name("ML noML") replace
 
 // Set up globals.
 do globals/globals
+do globals/analyses
+do globals/models
 
 // Set up Stata.
 do setup/setup
@@ -14,8 +16,8 @@ do setup/setup
 // Import and process the data.
 do data/data
 
-* // Do estimation.
-* do estimation/estimate
+// Do estimation.
+do estimation/estimate
 
 * // Make figures
 * do figures/figures

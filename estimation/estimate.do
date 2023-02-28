@@ -1,3 +1,23 @@
 version 16.1
 
-// TODO: Perform estimation.
+// Perform estimation.
+foreach analysis of global analyses {
+  // Perform estimation and store the estimates.
+  ${`analysis'_model}
+  assert e(converged)
+  estimates store `analysis'
+
+  // Compute and test residuals for normality for eintreg.
+  if "`e(cmd)'" == "eintreg" {
+    tempvar y_hat resid
+    predict `y_hat'
+    local y : word 1 of `e(depvar)'
+    generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
+    swilk `resid'
+    assert r(p) > 0.05
+  }
+}
+
+// TODO: Plot the Kaplan Meier like so:
+// TODO: The colors and their ordering come from: https://www.stata.com/statalist/archive/2011-02/msg00692.html
+// sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%20)) ci2opts(fcolor(maroon%20))

@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}27 Feb 2023, 16:57:05
+ {txt}opened on:  {res}28 Feb 2023, 11:42:44
 {txt}
 {com}. 
 . // Set up globals.
@@ -25,6 +25,44 @@
 {txt}
 {com}. 
 . global report_filename "products/report.docx"
+{txt}
+{com}. 
+. // Define the outcome variables.
+. global resource_outcome log_resource1 log_resource2 // TODO: Change to non-log!
+{txt}
+{com}. // Note: No need to specify outcomes for stset data.
+. 
+. // Define fixed effect covariate.
+. global adj_var i.meta_analysis_planned
+{txt}
+{com}. 
+. // Specify the model for endogeneous treatment assignment.
+. // TODO: Check if synthesis_planned corresponds to pre-specification.
+. global entreat rec_vs_none = i.field i.synthesis_planned , nointeract
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. do globals/analyses
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. // Define the analyses:
+. global analyses             rec_vs_none_resource
+{txt}
+{com}. global analyses ${c -(}analyses{c )-} // TODO: Add analyses
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. do globals/models
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. // Define the models used in the analyses.
+. global rec_vs_none_resource_model eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(${c -(}entreat{c )-})
 {txt}
 {com}. 
 {txt}end of do-file
@@ -186,15 +224,6 @@
 (0 real changes made)
 
 {com}. 
-. // Define the resource use variable.
-. // TODO: Do we need to log-transform to estimate *relative* resource use?
-. rename ResourceUsePersonHours resource_use
-{res}{txt}
-{com}. destring resource_use, replace force
-{txt}resource_use: contains nonnumeric characters; {res}replaced {txt}as {res}int
-{txt}(1 missing value generated)
-{res}{txt}
-{com}. 
 . // Define a completed variable (analogous to a failure indicator in survival analysis).
 . generate          completed = 1
 {txt}
@@ -208,6 +237,29 @@
 {com}. label    variable completed "Report completed?"
 {txt}
 {com}. drop OngoingYorN
+{txt}
+{com}. 
+. // Define the resource use variable.
+. tempvar resource
+{txt}
+{com}. rename ResourceUsePersonHours `resource'
+{res}{txt}
+{com}. destring `resource', replace force // One missing outcome. TODO: Note this in the report.
+{txt}__000005: contains nonnumeric characters; {res}replaced {txt}as {res}int
+{txt}(1 missing value generated)
+{res}{txt}
+{com}. generate log_resource1 = log(`resource')
+{txt}(1 missing value generated)
+
+{com}. generate log_resource2 = log(`resource')
+{txt}(1 missing value generated)
+
+{com}. replace  log_resource2 = . if !completed // For right-censored data.
+{txt}(3 real changes made, 3 to missing)
+
+{com}. label variable log_resource1 "Resource use (log person-hours)"
+{txt}
+{com}. label variable log_resource2 "Resource use (log person-hours); possibly censored"
 {txt}
 {com}. 
 . // Define commision date variable.
@@ -246,7 +298,8 @@
 {com}. replace completion = `max' if missing(completion)
 {txt}(3 real changes made)
 
-{com}. 
+{com}. // TODO: Replace max with the date of the last day of data collection.
+. 
 . // stset the data.
 . stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
@@ -277,9 +330,86 @@
 {txt}end of do-file
 
 {com}. 
-. * // Do estimation.
-. * do estimation/estimate
+. // Do estimation.
+. do estimation/estimate
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. // Perform estimation.
+. foreach analysis of global analyses {c -(}
+{txt}  2{com}.   // Perform estimation and store the estimates.
+.   ${c -(}`analysis'_model{c )-}
+{txt}  3{com}.   assert e(converged)
+{txt}  4{com}.   estimates store `analysis'
+{txt}  5{com}. 
+.   // Compute and test residuals for normality for eintreg.
+.   if "`e(cmd)'" == "eintreg" {c -(}
+{txt}  6{com}.     tempvar y_hat resid
+{txt}  7{com}.     predict `y_hat'
+{txt}  8{com}.     local y : word 1 of `e(depvar)'
+{txt}  9{com}.     generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
+{txt} 10{com}.     swilk `resid'
+{txt} 11{com}.     assert r(p) > 0.05
+{txt} 12{com}.   {c )-}
+{txt} 13{com}. {c )-}
+{res}
+{txt}Iteration 0:{space 3}log likelihood = {res:-53.241989}  
+Iteration 1:{space 3}log likelihood = {res:-53.235178}  
+Iteration 2:{space 3}log likelihood = {res:-53.235122}  
+Iteration 3:{space 3}log likelihood = {res:-53.235122}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
+{txt}{col 49}   Uncensored{col 67}= {res}        30
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         2
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     14.71
+{txt}Log likelihood = {res}-53.235122{txt}{col 49}Prob > chi2{col 67}= {res}    0.0006
+
+{txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 14}meta_analysis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.28{col 60}{space 1}    3.46{col 69}{space 3} 0.00{col 77}{space 4}     0.43{col 90}{space 3}     1.54
+{txt}{space 35} {c |}
+{space 24}rec_vs_none {c |}
+{space 33}H  {c |}{col 37}{res}{space 2}    -1.50{col 49}{space 2}     0.79{col 60}{space 1}   -1.88{col 69}{space 3} 0.06{col 77}{space 4}    -3.05{col 90}{space 3}     0.06
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.06{col 49}{space 2}     0.32{col 60}{space 1}   18.97{col 69}{space 3} 0.00{col 77}{space 4}     5.43{col 90}{space 3}     6.68
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_none                         {txt}{c |}
+{space 30}field {c |}
+{space 27}Welface  {c |}{col 37}{res}{space 2}    -1.52{col 49}{space 2}     0.65{col 60}{space 1}   -2.34{col 69}{space 3} 0.02{col 77}{space 4}    -2.80{col 90}{space 3}    -0.25
+{txt}{space 35} {c |}
+{space 18}synthesis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     1.20{col 49}{space 2}     0.67{col 60}{space 1}    1.79{col 69}{space 3} 0.07{col 77}{space 4}    -0.11{col 90}{space 3}     2.51
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_none                        {txt}{c |}
+{space 31}cut1 {c |}{col 37}{res}{space 2}     0.27{col 49}{space 2}     0.44{col 77}{space 4}    -0.59{col 90}{space 3}     1.12
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.16{col 77}{space 4}     0.34{col 90}{space 3}     1.01
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.17{col 49}{space 2}     0.73{col 60}{space 1}    0.23{col 69}{space 3} 0.81{col 77}{space 4}    -0.86{col 90}{space 3}     0.93
+{txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+(option {bf:mean} assumed; average structural function mean)
+{res}{txt}(6 missing values generated)
+{res}{txt}(9 missing values generated)
+
+                   Shapiro-Wilk W test for normal data
+
+    Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
+{hline 13}{c +}{hline 54}
+    __000001 {c |} {res}        30    0.98043      0.622    -0.982    0.83688
+{txt}
+{com}. 
+. // TODO: Plot the Kaplan Meier like so:
+. // TODO: The colors and their ordering come from: https://www.stata.com/statalist/archive/2011-02/msg00692.html
+. // sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%20)) ci2opts(fcolor(maroon%20))
 . 
+{txt}end of do-file
+
+{com}. 
 . * // Make figures
 . * do figures/figures
 . 

@@ -67,11 +67,6 @@ foreach p of local planned {
   drop `p'
 }
 
-// Define the resource use variable.
-// TODO: Do we need to log-transform to estimate *relative* resource use?
-rename ResourceUsePersonHours resource_use
-destring resource_use, replace force
-
 // Define a completed variable (analogous to a failure indicator in survival analysis).
 generate          completed = 1
 replace           completed = 0 if OngoingYorN == "Y"
@@ -79,6 +74,16 @@ label    define   completed 0 No 1 Yes
 label    values   completed completed
 label    variable completed "Report completed?"
 drop OngoingYorN
+
+// Define the resource use variable.
+tempvar resource
+rename ResourceUsePersonHours `resource'
+destring `resource', replace force // One missing outcome. TODO: Note this in the report.
+generate log_resource1 = log(`resource')
+generate log_resource2 = log(`resource')
+replace  log_resource2 = . if !completed // For right-censored data.
+label variable log_resource1 "Resource use (log person-hours)"
+label variable log_resource2 "Resource use (log person-hours); possibly censored"
 
 // Define commision date variable.
 tempvar c_day c_month c_year commission
@@ -99,6 +104,7 @@ generate completion = date(`completion', "DMY")
 tempvar max
 egen `max' = max(completion)
 replace completion = `max' if missing(completion)
+// TODO: Replace max with the date of the last day of data collection.
 
 // stset the data.
 stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
