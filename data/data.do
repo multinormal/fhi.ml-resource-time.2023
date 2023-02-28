@@ -101,10 +101,7 @@ rename CompletionYear2020 `c_year'
 generate `completion' = `c_day' + "/" + `c_month' + "/" + `c_year'
 generate completion = date(`completion', "DMY")
 // Set right-censoring date for ongoing reviews.
-tempvar max
-egen `max' = max(completion)
-replace completion = `max' if missing(completion)
-// TODO: Replace max with the date of the last day of data collection.
+replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
 
 // stset the data.
 stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
