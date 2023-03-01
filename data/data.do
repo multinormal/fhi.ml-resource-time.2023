@@ -61,7 +61,7 @@ label define planned 0 No 1 Yes
 local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
 local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
 local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
-local SynthesisplannedNMAYorN      nma_planned           // New variable name. // TODO: Drop all NMAs from data.
+local SynthesisplannedNMAYorN      nma_planned           // New variable name.
 local synthesis_planned_label     "Was any synthesis planned?"
 local meta_analysis_planned_label "Was meta-analysis planned?"
 local nma_planned_label           "Was NMA planned?"
@@ -114,5 +114,9 @@ stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
 // We do not have data on number of downloads or comissioner satisfaction.
 drop Commissionersatisfactionoveral Numberofdownloadstodate
+
+// Ensure that there are no NMAs in the sample.
+levelsof nma_planned
+assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
 
 // TODO: Drop other variables with uppercase first letters?

@@ -1034,4 +1034,13 @@ Sorted by:
 {txt}{col 13}tabulation:  Freq.   Numeric  Label
 {col 21}{res}        39{col 33}       0{col 43}{txt}No
 
+{com}. levelsof nma_planned
+{res}{txt}0
+
+{com}. disp r(r)
+{res}1
+
+{com}. disp r(levels)
+{res}0
+
 {com}. 
