@@ -47,6 +47,12 @@ foreach t of local treatments {
   drop `t'
 }
 
+// Define the variable labels for the comaprisons.
+label variable rec_vs_none   "Recommended vs no ML use"
+label variable rec_vs_nonrec "Recommended vs non-recommended ML use"
+label variable any_vs_none   "Any vs no ML use"
+// Note: We do not use the other comparisons, so will not rename them.
+
 // Define a value label for analyses that can be prespecified.
 label define planned 0 No 1 Yes
 
