@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res} 1 Mar 2023, 17:35:13
+ {txt}opened on:  {res} 1 Mar 2023, 17:42:47
 {txt}
 {com}. 
 . // Set up globals.
@@ -748,7 +748,7 @@ meta_analysis_planned {c |}
 {txt}
 {com}. local opts `opts' ylabel(0 "0%" 0.25 "25%" 0.5 "50%" 0.75 "75%" 1 "100%", angle(0) nogrid) // Y-axis ticks etc.
 {txt}
-{com}. local opts `opts' ytitle("Incomplete Reviews (95% CI)")
+{com}. local opts `opts' ytitle("Completed Reviews (95% CI)")
 {txt}
 {com}. 
 . // Make a Kaplan-Meier plot for each comparison.
@@ -758,7 +758,7 @@ meta_analysis_planned {c |}
 {txt}  3{com}.   local title "Time-to-completion for `comparison_name'"
 {txt}  4{com}. 
 .   // Make the figure.
-.   sts graph , by(`comparison') `opts' title("Time-to-completion for" "`comparison_name'")
+.   sts graph , failure by(`comparison') `opts' title("Time-to-completion for" "`comparison_name'")
 {txt}  5{com}.   
 .   // Save the figure in the required formats.
 .   foreach format in /*png*/ pdf {c -(} // TODO: Add png and TIFF with compression via sips.

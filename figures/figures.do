@@ -9,7 +9,7 @@ local opts `opts' risktable(, rowtitle("Blinded 2") group(2))            // TODO
 local opts `opts' censored(number)                                       // Indicate number of censorings.
 local opts `opts' xtitle("Weeks After Review Commission")                // X-axis title.
 local opts `opts' ylabel(0 "0%" 0.25 "25%" 0.5 "50%" 0.75 "75%" 1 "100%", angle(0) nogrid) // Y-axis ticks etc.
-local opts `opts' ytitle("Incomplete Reviews (95% CI)")
+local opts `opts' ytitle("Completed Reviews (95% CI)")
 
 // Make a Kaplan-Meier plot for each comparison.
 foreach comparison of global comparisons {  
@@ -18,7 +18,7 @@ foreach comparison of global comparisons {
   local title "Time-to-completion for `comparison_name'"
 
   // Make the figure.
-  sts graph , by(`comparison') `opts' title("Time-to-completion for" "`comparison_name'")
+  sts graph , failure by(`comparison') `opts' title("Time-to-completion for" "`comparison_name'")
   
   // Save the figure in the required formats.
   foreach format in /*png*/ pdf { // TODO: Add png and TIFF with compression via sips.
