@@ -48,9 +48,9 @@ foreach t of local treatments {
 }
 
 // Define the variable labels for the comaprisons.
-label variable rec_vs_none   "Recommended vs no ML use"
-label variable rec_vs_nonrec "Recommended vs non-recommended ML use"
-label variable any_vs_none   "Any vs no ML use"
+label variable rec_vs_none   "Recommended vs No ML Use"
+label variable rec_vs_nonrec "Recommended vs Ron-recommended ML Use"
+label variable any_vs_none   "Any vs No ML Use"
 // Note: We do not use the other comparisons, so will not rename them.
 
 // Define a value label for analyses that can be prespecified.
