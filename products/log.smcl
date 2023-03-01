@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res} 1 Mar 2023, 17:10:46
+ {txt}opened on:  {res} 1 Mar 2023, 17:35:13
 {txt}
 {com}. 
 . // Set up globals.
@@ -24,7 +24,7 @@
 . global random_seed 1234
 {txt}
 {com}. 
-. global report_filename "products/report.docx"
+. global report_filename "products/ml-resource-time-report.docx"
 {txt}
 {com}. 
 . // Define the comparisons specified in the protocol published in the journal.
@@ -212,7 +212,7 @@
 {txt}
 {com}. local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
 {txt}
-{com}. local SynthesisplannedNMAYorN      nma_planned           // New variable name. // TODO: Drop all NMAs from data.
+{com}. local SynthesisplannedNMAYorN      nma_planned           // New variable name.
 {txt}
 {com}. local synthesis_planned_label     "Was any synthesis planned?"
 {txt}
@@ -326,6 +326,13 @@
 {com}. 
 . // We do not have data on number of downloads or comissioner satisfaction.
 . drop Commissionersatisfactionoveral Numberofdownloadstodate
+{txt}
+{com}. 
+. // Ensure that there are no NMAs in the sample.
+. levelsof nma_planned
+{res}{txt}0
+
+{com}. assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
 {txt}
 {com}. 
 . // TODO: Drop other variables with uppercase first letters?
@@ -885,162 +892,12 @@ meta_analysis_planned {c |}
 {com}. 
 . // Save the report to the specified filename.
 . putdocx save "${c -(}report_filename{c )-}", replace
-{res}successfully replaced {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/report.docx"}
+{res}successfully replaced {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx"}
 {txt}
 {com}. 
 {txt}end of do-file
 
 {com}. 
 {txt}end of do-file
-
-{com}. list product_type 
-{txt}
-     {c TLC}{hline 10}{c TRC}
-     {c |} {res}produc~e {txt}{c |}
-     {c LT}{hline 10}{c RT}
-  1. {c |} {res}      RR {txt}{c |}
-  2. {c |} {res}     EGM {txt}{c |}
-  3. {c |} {res}     EGM {txt}{c |}
-  4. {c |} {res}      SR {txt}{c |}
-  5. {c |} {res}      SR {txt}{c |}
-     {c LT}{hline 10}{c RT}
-  6. {c |} {res}      SR {txt}{c |}
-  7. {c |} {res}      SR {txt}{c |}
-  8. {c |} {res}      SR {txt}{c |}
-  9. {c |} {res}      SR {txt}{c |}
- 10. {c |} {res}      SR {txt}{c |}
-     {c LT}{hline 10}{c RT}
- 11. {c |} {res}      MR {txt}{c |}
- 12. {c |} {res}     HTA {txt}{c |}
- 13. {c |} {res}     HTA {txt}{c |}
- 14. {c |} {res}      MR {txt}{c |}
- 15. {c |} {res}      RR {txt}{c |}
-     {c LT}{hline 10}{c RT}
- 16. {c |} {res}      MR {txt}{c |}
- 17. {c |} {res}      SR {txt}{c |}
- 18. {c |} {res}      RR {txt}{c |}
- 19. {c |} {res}      RR {txt}{c |}
- 20. {c |} {res}      SR {txt}{c |}
-     {c LT}{hline 10}{c RT}
- 21. {c |} {res}     HTA {txt}{c |}
- 22. {c |} {res}     EGM {txt}{c |}
- 23. {c |} {res}     EGM {txt}{c |}
- 24. {c |} {res}     EGM {txt}{c |}
- 25. {c |} {res}     EGM {txt}{c |}
-     {c LT}{hline 10}{c RT}
- 26. {c |} {res}     EGM {txt}{c |}
- 27. {c |} {res}     EGM {txt}{c |}
- 28. {c |} {res}     HTA {txt}{c |}
- 29. {c |} {res}     EGM {txt}{c |}
- 30. {c |} {res}      SR {txt}{c |}
-     {c LT}{hline 10}{c RT}
- 31. {c |} {res}      RR {txt}{c |}
- 32. {c |} {res}      RR {txt}{c |}
- 33. {c |} {res}     HTA {txt}{c |}
- 34. {c |} {res}     HTA {txt}{c |}
- 35. {c |} {res}      RR {txt}{c |}
-     {c LT}{hline 10}{c RT}
- 36. {c |} {res}      RR {txt}{c |}
- 37. {c |} {res}      RR {txt}{c |}
- 38. {c |} {res}      MR {txt}{c |}
- 39. {c |} {res}     HTA {txt}{c |}
-     {c BLC}{hline 10}{c BRC}
-
-{com}. codebook product_type 
-
-{txt}{hline}
-{res}product_type{right:Type of product}
-{txt}{hline}
-
-{col 19}type:  numeric ({res}long{txt})
-{ralign 22:label}:  {res:product_type}
-
-{col 18}range:  [{res}1{txt},{res}5{txt}]{col 55}units:  {res}1
-{col 10}{txt}unique values:  {res}5{col 51}{txt}missing .:  {res}0{txt}/{res}39
-
-{txt}{col 13}tabulation:  Freq.   Numeric  Label
-{col 21}{res}         9{col 33}       1{col 43}{txt}EGM
-{col 21}{res}         7{col 33}       2{col 43}{txt}HTA
-{col 21}{res}         4{col 33}       3{col 43}{txt}MR
-{col 21}{res}         9{col 33}       4{col 43}{txt}RR
-{col 21}{res}        10{col 33}       5{col 43}{txt}SR
-
-{com}. desc
-
-{txt}Contains data
-  obs:{res}            39                          
-{txt} vars:{res}            34                          
-{txt}{hline}
-              storage   display    value
-variable name   type    format     label      variable label
-{hline}
-{p 0 48}{res}{bind:ReviewID       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Review ID{p_end}
-{p 0 48}{bind:Kontanktpunkt  }{txt}{bind: str12   }{bind:{txt}%12s      }{space 1}{bind:         }{bind:  }{res}{res}Kontanktpunkt{p_end}
-{p 0 48}{bind:Reviewshortname}{txt}{bind: str105  }{bind:{txt}%105s     }{space 1}{bind:         }{bind:  }{res}{res}Review short name{p_end}
-{p 0 48}{bind:TitleEnglish   }{txt}{bind: str188  }{bind:{txt}%188s     }{space 1}{bind:         }{bind:  }{res}{res}Title (English){p_end}
-{p 0 48}{bind:TittelNorsk    }{txt}{bind: str178  }{bind:{txt}%178s     }{space 1}{bind:         }{bind:  }{res}{res}Tittel (Norsk){p_end}
-{p 0 48}{bind:year           }{txt}{bind: int     }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Year{p_end}
-{p 0 48}{bind:field          }{txt}{bind: long    }{bind:{txt}%10.0g    }{space 1}{bind:field    }{bind:  }{res}{res}Area (Health or Welfare){p_end}
-{p 0 48}{bind:product_type   }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}product_type{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Type of product{p_end}
-{p 0 48}{bind:update         }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{bind:update   }{bind:  }{res}{res}Update (Y/N){p_end}
-{p 0 48}{bind:hta            }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{bind:hta      }{bind:  }{res}{res}HTA (Y or N){p_end}
-{p 0 48}{bind:rec_vs_none    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_none{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Recommended vs No ML Use{p_end}
-{p 0 48}{bind:rec_vs_nonrec  }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_nonrec{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Recommended vs Ron-recommended ML Use{p_end}
-{p 0 48}{bind:any_vs_none    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}any_vs_none{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Any vs No ML Use{p_end}
-{p 0 48}{bind:rec_vs_under   }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_under{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Recom vs under-use{p_end}
-{p 0 48}{bind:rec_vs_over    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_over{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Recom vs over-use{p_end}
-{p 0 48}{bind:synthesis_pla~d}{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was any synthesis planned?{p_end}
-{p 0 48}{bind:meta_analysis~d}{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was meta-analysis planned?{p_end}
-{p 0 48}{bind:nma_planned    }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was NMA planned?{p_end}
-{p 0 48}{bind:completed      }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{txt}completed{p_end}
-{p 0 48}{space 44}{bind:  }{res}{res}Report completed?{p_end}
-{p 0 48}{bind:log_resource1  }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Resource use (log person-hours){p_end}
-{p 0 48}{bind:log_resource2  }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Resource use (log person-hours); possibly censored{p_end}
-{p 0 48}{bind:commission     }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
-{p 0 48}{bind:completion     }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
-{p 0 48}{bind:_est_rec_vs_n..}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
-{p 0 48}{bind:_est_rec~e_time}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
-{p 0 48}{bind:_est~c_resource}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
-{p 0 48}{bind:_est_rec~c_time}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
-{p 0 48}{bind:_est_any_vs_~ce}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
-{p 0 48}{bind:_st            }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}1 if record is to be used; 0 otherwise{p_end}
-{p 0 48}{bind:_d             }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}1 if failure; 0 if censored{p_end}
-{p 0 48}{bind:_origin        }{txt}{bind: int     }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Evaluated value of origin(){p_end}
-{p 0 48}{bind:_t             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Analysis time when record ends{p_end}
-{p 0 48}{bind:_t0            }{txt}{bind: byte    }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Analysis time when record begins{p_end}
-{p 0 48}{bind:_est_any_vs_~me}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
-{txt}{hline}
-Sorted by: 
-{res}     Note: Dataset has changed since last saved.
-
-{com}. codebook nma_planned
-
-{txt}{hline}
-{res}nma_planned{right:Was NMA planned?}
-{txt}{hline}
-
-{col 19}type:  numeric ({res}float{txt})
-{ralign 22:label}:  {res:planned}
-
-{col 18}range:  [{res}0{txt},{res}0{txt}]{col 55}units:  {res}1
-{col 10}{txt}unique values:  {res}1{col 51}{txt}missing .:  {res}0{txt}/{res}39
-
-{txt}{col 13}tabulation:  Freq.   Numeric  Label
-{col 21}{res}        39{col 33}       0{col 43}{txt}No
-
-{com}. levelsof nma_planned
-{res}{txt}0
-
-{com}. disp r(r)
-{res}1
-
-{com}. disp r(levels)
-{res}0
 
 {com}. 

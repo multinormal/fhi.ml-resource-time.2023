@@ -7,7 +7,7 @@ global signature "39:28(17933):3819763061:1092073612"
 
 global random_seed 1234
 
-global report_filename "products/report.docx"
+global report_filename "products/ml-resource-time-report.docx"
 
 // Define the comparisons specified in the protocol published in the journal.
 global comparisons rec_vs_none rec_vs_nonrec any_vs_none 
