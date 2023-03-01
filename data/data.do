@@ -47,6 +47,12 @@ foreach t of local treatments {
   drop `t'
 }
 
+// Define the variable labels for the comaprisons.
+label variable rec_vs_none   "Recommended vs No ML Use"
+label variable rec_vs_nonrec "Recommended vs Ron-recommended ML Use"
+label variable any_vs_none   "Any vs No ML Use"
+// Note: We do not use the other comparisons, so will not rename them.
+
 // Define a value label for analyses that can be prespecified.
 label define planned 0 No 1 Yes
 
@@ -101,10 +107,7 @@ rename CompletionYear2020 `c_year'
 generate `completion' = `c_day' + "/" + `c_month' + "/" + `c_year'
 generate completion = date(`completion', "DMY")
 // Set right-censoring date for ongoing reviews.
-tempvar max
-egen `max' = max(completion)
-replace completion = `max' if missing(completion)
-// TODO: Replace max with the date of the last day of data collection.
+replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
 
 // stset the data.
 stset completion , failure(completed) origin(time commission) scale(7 /*days*/)

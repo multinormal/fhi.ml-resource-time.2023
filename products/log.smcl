@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}28 Feb 2023, 11:42:44
+ {txt}opened on:  {res} 1 Mar 2023, 17:10:46
 {txt}
 {com}. 
 . // Set up globals.
@@ -12,7 +12,7 @@
 {com}. version 16.1
 {txt}
 {com}. 
-. global data_file  "data/raw/Blinded data sheet_310123 - Downloaded 27-02-23.xlsx"
+. global data_file  "data/raw/Blinded data sheet_310123 - Downloaded 01-03-23.xlsx"
 {txt}
 {com}. global sheet_name "Data Extraction Form"
 {txt}
@@ -27,6 +27,16 @@
 . global report_filename "products/report.docx"
 {txt}
 {com}. 
+. // Define the comparisons specified in the protocol published in the journal.
+. global comparisons rec_vs_none rec_vs_nonrec any_vs_none 
+{txt}
+{com}. // TODO: Report that we are dropping recommended versus over- underuse comparisons
+. // TODO: (i.e., those specified in the revised preprint), as only 2 observations in one of the groups for each of these.
+. 
+. // Define the outcomes.
+. global outcomes resource time
+{txt}
+{com}. 
 . // Define the outcome variables.
 . global resource_outcome log_resource1 log_resource2 // TODO: Change to non-log!
 {txt}
@@ -37,21 +47,8 @@
 {txt}
 {com}. 
 . // Specify the model for endogeneous treatment assignment.
-. // TODO: Check if synthesis_planned corresponds to pre-specification.
-. global entreat rec_vs_none = i.field i.synthesis_planned , nointeract
-{txt}
-{com}. 
-{txt}end of do-file
-
-{com}. do globals/analyses
-{txt}
-{com}. version 16.1
-{txt}
-{com}. 
-. // Define the analyses:
-. global analyses             rec_vs_none_resource
-{txt}
-{com}. global analyses ${c -(}analyses{c )-} // TODO: Add analyses
+. // TODO: Check if synthesis_planned corresponds to pre-specification. Waiting on a reply from Jose.
+. global endo_vars i.field i.synthesis_planned
 {txt}
 {com}. 
 {txt}end of do-file
@@ -61,8 +58,10 @@
 {com}. version 16.1
 {txt}
 {com}. 
-. // Define the models used in the analyses.
-. global rec_vs_none_resource_model eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(${c -(}entreat{c )-})
+. foreach comparison of global comparisons {c -(}
+{txt}  2{com}.   global `comparison'_resource_model eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(`comparison' = ${c -(}endo_vars{c )-} , nointeract)
+{txt}  3{com}.   global `comparison'_time_model     stteffects ipwra (${c -(}adj_var{c )-}) (`comparison' ${c -(}endo_vars{c )-}) , aequations
+{txt}  4{com}. {c )-}
 {txt}
 {com}. 
 {txt}end of do-file
@@ -192,6 +191,15 @@
 (18 real changes made)
 
 {com}. 
+. // Define the variable labels for the comaprisons.
+. label variable rec_vs_none   "Recommended vs No ML Use"
+{txt}
+{com}. label variable rec_vs_nonrec "Recommended vs Ron-recommended ML Use"
+{txt}
+{com}. label variable any_vs_none   "Any vs No ML Use"
+{txt}
+{com}. // Note: We do not use the other comparisons, so will not rename them.
+. 
 . // Define a value label for analyses that can be prespecified.
 . label define planned 0 No 1 Yes
 {txt}
@@ -291,15 +299,10 @@
 {txt}(3 missing values generated)
 
 {com}. // Set right-censoring date for ongoing reviews.
-. tempvar max
-{txt}
-{com}. egen `max' = max(completion)
-{txt}
-{com}. replace completion = `max' if missing(completion)
+. replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
 {txt}(3 real changes made)
 
-{com}. // TODO: Replace max with the date of the last day of data collection.
-. 
+{com}. 
 . // stset the data.
 . stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
@@ -311,14 +314,14 @@
 
 {txt}{hline 78}
 {res}         39{txt}  total observations
-{res}          1{txt}  observation ends on or before enter()
+{res}          0{txt}  exclusions
 {hline 78}
-{res}         38{txt}  observations remaining, representing
-{res}         35{txt}  failures in single-record/single-failure data
-{res}      1,200{txt}  total analysis time at risk and under observation
+{res}         39{txt}  observations remaining, representing
+{res}         36{txt}  failures in single-record/single-failure data
+{res}  1,236.286{txt}  total analysis time at risk and under observation
                                                 at risk from t = {res}        0
                                      {txt}earliest observed entry t = {res}        0
-                                          {txt}last observed exit t = {res} 101.8571
+                                          {txt}last observed exit t = {res} 102.1429
 {txt}
 {com}. 
 . // We do not have data on number of downloads or comissioner satisfaction.
@@ -337,23 +340,30 @@
 {txt}
 {com}. 
 . // Perform estimation.
-. foreach analysis of global analyses {c -(}
-{txt}  2{com}.   // Perform estimation and store the estimates.
-.   ${c -(}`analysis'_model{c )-}
-{txt}  3{com}.   assert e(converged)
-{txt}  4{com}.   estimates store `analysis'
+. foreach comparison of global comparisons {c -(}
+{txt}  2{com}.   foreach outcome of global outcomes {c -(}
+{txt}  3{com}.     disp "{c -(}hline{c )-}"
+{txt}  4{com}.     disp as result "Analysis for: {c -(}ul:`comparison'{c )-} with respect to {c -(}ul:`outcome'{c )-}"
 {txt}  5{com}. 
-.   // Compute and test residuals for normality for eintreg.
-.   if "`e(cmd)'" == "eintreg" {c -(}
-{txt}  6{com}.     tempvar y_hat resid
-{txt}  7{com}.     predict `y_hat'
-{txt}  8{com}.     local y : word 1 of `e(depvar)'
-{txt}  9{com}.     generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
-{txt} 10{com}.     swilk `resid'
-{txt} 11{com}.     assert r(p) > 0.05
-{txt} 12{com}.   {c )-}
-{txt} 13{com}. {c )-}
-{res}
+.     // Perform estimation and store the estimates.
+.     ${c -(}`comparison'_`outcome'_model{c )-}
+{txt}  6{com}.     assert e(converged)
+{txt}  7{com}.     estimates store `comparison'_`outcome'
+{txt}  8{com}. 
+.     // Compute and test residuals for normality for eintreg.
+.     if "`e(cmd)'" == "eintreg" {c -(}
+{txt}  9{com}.       tempvar y_hat resid
+{txt} 10{com}.       predict `y_hat'
+{txt} 11{com}.       local y : word 1 of `e(depvar)'
+{txt} 12{com}.       generate `resid' = `y' - `y_hat' if completed // Limit to uncensored observations.
+{txt} 13{com}.       swilk `resid'
+{txt} 14{com}.       assert r(p) > 0.05
+{txt} 15{com}.     {c )-}
+{txt} 16{com}.   {c )-}
+{txt} 17{com}. {c )-}
+{hline}
+{res}Analysis for: {ul:rec_vs_none} with respect to {ul:resource}
+
 {txt}Iteration 0:{space 3}log likelihood = {res:-53.241989}  
 Iteration 1:{space 3}log likelihood = {res:-53.235178}  
 Iteration 2:{space 3}log likelihood = {res:-53.235122}  
@@ -401,7 +411,305 @@ Iteration 3:{space 3}log likelihood = {res:-53.235122}
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
     __000001 {c |} {res}        30    0.98043      0.622    -0.982    0.83688
-{txt}
+{hline}
+Analysis for: {ul:rec_vs_none} with respect to {ul:time}
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+
+{txt}Iteration 0:{space 3}EE criterion = {res: 3.086e-20}  
+Iteration 1:{space 3}EE criterion = {res: 5.355e-28}  
+{res}
+{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        33
+{txt:Estimator}{col 16}:{res: IPW regression adjustment}
+{txt:Outcome model}{col 16}:{res: Weibull}
+{txt:Treatment model}{col 16}:{res: logit}
+{txt:Censoring model}{col 16}:{res: none}
+{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 23}{c |}{col 35}    Robust
+{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
+{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}ATE                   {txt}{c |}
+{space 10}rec_vs_none {c |}
+{space 12}(H vs G)  {c |}{col 23}{res}{space 2}     2.29{col 35}{space 2}     8.65{col 46}{space 1}    0.26{col 55}{space 3} 0.79{col 63}{space 4}   -14.66{col 76}{space 3}    19.23
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}POmean                {txt}{c |}
+{space 10}rec_vs_none {c |}
+{space 19}G  {c |}{col 23}{res}{space 2}    33.02{col 35}{space 2}     5.13{col 46}{space 1}    6.44{col 55}{space 3} 0.00{col 63}{space 4}    22.97{col 76}{space 3}    43.08
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1                  {txt}{c |}
+meta_analysis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.42{col 35}{space 2}     0.31{col 46}{space 1}    1.36{col 55}{space 3} 0.17{col 63}{space 4}    -0.19{col 76}{space 3}     1.04
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.41{col 35}{space 2}     0.19{col 46}{space 1}   17.51{col 55}{space 3} 0.00{col 63}{space 4}     3.03{col 76}{space 3}     3.79
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1_lnshape          {txt}{c |}
+{space 16}_cons {c |}{col 23}{res}{space 2}     0.50{col 35}{space 2}     0.16{col 46}{space 1}    3.12{col 55}{space 3} 0.00{col 63}{space 4}     0.19{col 76}{space 3}     0.82
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME2                  {txt}{c |}
+meta_analysis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     1.70{col 35}{space 2}     0.20{col 46}{space 1}    8.41{col 55}{space 3} 0.00{col 63}{space 4}     1.30{col 76}{space 3}     2.10
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     2.61{col 35}{space 2}     0.09{col 46}{space 1}   27.86{col 55}{space 3} 0.00{col 63}{space 4}     2.43{col 76}{space 3}     2.80
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME2_lnshape          {txt}{c |}
+{space 16}_cons {c |}{col 23}{res}{space 2}     1.10{col 35}{space 2}     0.26{col 46}{space 1}    4.17{col 55}{space 3} 0.00{col 63}{space 4}     0.58{col 76}{space 3}     1.61
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}TME2                  {txt}{c |}
+{space 16}field {c |}
+{space 13}Welface  {c |}{col 23}{res}{space 2}    -2.60{col 35}{space 2}     1.10{col 46}{space 1}   -2.36{col 55}{space 3} 0.02{col 63}{space 4}    -4.76{col 76}{space 3}    -0.44
+{txt}{space 21} {c |}
+{space 4}synthesis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     1.80{col 35}{space 2}     1.10{col 46}{space 1}    1.65{col 55}{space 3} 0.10{col 63}{space 4}    -0.35{col 76}{space 3}     3.95
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}    -0.14{col 35}{space 2}     0.61{col 46}{space 1}   -0.24{col 55}{space 3} 0.81{col 63}{space 4}    -1.33{col 76}{space 3}     1.04
+{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{hline}
+{res}Analysis for: {ul:rec_vs_nonrec} with respect to {ul:resource}
+
+{txt}Iteration 0:{space 3}log likelihood = {res:-38.952451}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-37.982042}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-37.599462}  (not concave)
+Iteration 3:{space 3}log likelihood = {res:-37.315714}  
+Iteration 4:{space 3}log likelihood = {res:-37.022692}  (not concave)
+Iteration 5:{space 3}log likelihood = {res:-36.478862}  (not concave)
+Iteration 6:{space 3}log likelihood = {res:-35.555584}  (not concave)
+Iteration 7:{space 3}log likelihood = {res:-35.253444}  (not concave)
+Iteration 8:{space 3}log likelihood = {res:-35.083929}  
+Iteration 9:{space 3}log likelihood = {res:-35.083928}  (backed up)
+Iteration 10:{space 2}log likelihood = {res:-34.904879}  
+Iteration 11:{space 2}log likelihood = {res:-34.793223}  
+Iteration 12:{space 2}log likelihood = {res:-34.715288}  
+Iteration 13:{space 2}log likelihood = {res:-34.710134}  
+Iteration 14:{space 2}log likelihood = {res:-34.672283}  
+Iteration 15:{space 2}log likelihood = {res:-34.619107}  
+Iteration 16:{space 2}log likelihood = {res:-34.605753}  
+Iteration 17:{space 2}log likelihood = {res:-34.599842}  
+Iteration 18:{space 2}log likelihood = {res:-34.596512}  
+Iteration 19:{space 2}log likelihood = {res:-34.594663}  
+Iteration 20:{space 2}log likelihood = {res:-34.593807}  
+Iteration 21:{space 2}log likelihood = {res: -34.59332}  
+Iteration 22:{space 2}log likelihood = {res:-34.593077}  
+Iteration 23:{space 2}log likelihood = {res:-34.592944}  
+Iteration 24:{space 2}log likelihood = {res:-34.592876}  
+Iteration 25:{space 2}log likelihood = {res: -34.59284}  
+Iteration 26:{space 2}log likelihood = {res:-34.592821}  
+Iteration 27:{space 2}log likelihood = {res:-34.592811}  
+Iteration 28:{space 2}log likelihood = {res:-34.592806}  
+Iteration 29:{space 2}log likelihood = {res:-34.592803}  
+Iteration 30:{space 2}log likelihood = {res:-34.592802}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        27
+{txt}{col 49}   Uncensored{col 67}= {res}        24
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         3
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}   2021.79
+{txt}Log likelihood = {res}-34.592802{txt}{col 49}Prob > chi2{col 67}= {res}    0.0000
+
+{txt}{hline 38}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 39}{c |}      Coef.{col 51}   Std. Err.{col 63}      z{col 71}   P>|z|{col 79}     [95% Con{col 92}f. Interval]
+{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}meta_analysis_planned {c |}
+{space 33}Yes  {c |}{col 39}{res}{space 2}     0.15{col 51}{space 2}     0.42{col 62}{space 1}    0.35{col 71}{space 3} 0.72{col 79}{space 4}    -0.68{col 92}{space 3}     0.98
+{txt}{space 37} {c |}
+{space 24}rec_vs_nonrec {c |}
+{space 35}K  {c |}{col 39}{res}{space 2}     1.54{col 51}{space 2}     0.03{col 62}{space 1}   44.94{col 71}{space 3} 0.00{col 79}{space 4}     1.47{col 92}{space 3}     1.60
+{txt}{space 32}_cons {c |}{col 39}{res}{space 2}     6.14{col 51}{space 2}     0.31{col 62}{space 1}   20.11{col 71}{space 3} 0.00{col 79}{space 4}     5.54{col 92}{space 3}     6.73
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_nonrec                         {txt}{c |}
+{space 32}field {c |}
+{space 29}Welface  {c |}{col 39}{res}{space 2}    -1.08{col 51}{space 2}     0.16{col 62}{space 1}   -6.72{col 71}{space 3} 0.00{col 79}{space 4}    -1.39{col 92}{space 3}    -0.76
+{txt}{space 37} {c |}
+{space 20}synthesis_planned {c |}
+{space 33}Yes  {c |}{col 39}{res}{space 2}     0.58{col 51}{space 2}     0.52{col 62}{space 1}    1.12{col 71}{space 3} 0.26{col 79}{space 4}    -0.43{col 92}{space 3}     1.60
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/rec_vs_nonrec                        {txt}{c |}
+{space 33}cut1 {c |}{col 39}{res}{space 2}     0.49{col 51}{space 2}     0.36{col 79}{space 4}    -0.21{col 92}{space 3}     1.20
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 18}var(e.log_resource1){c |}{col 39}{res}{space 2}     0.70{col 51}{space 2}     0.20{col 79}{space 4}     0.40{col 92}{space 3}     1.24
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_nonrec,e.log_resource1){c |}{col 39}{res}{space 2}    -1.00{col 51}{space 2}        .{col 62}{space 1}       .{col 71}{space 3}    .{col 79}{space 4}        .{col 92}{space 3}        .
+{txt}{hline 38}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+(option {bf:mean} assumed; average structural function mean)
+{res}{txt}(12 missing values generated)
+{res}{txt}(15 missing values generated)
+
+                   Shapiro-Wilk W test for normal data
+
+    Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
+{hline 13}{c +}{hline 54}
+    __000003 {c |} {res}        24    0.95690      1.163     0.307    0.37934
+{hline}
+Analysis for: {ul:rec_vs_nonrec} with respect to {ul:time}
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+
+{txt}Iteration 0:{space 3}EE criterion = {res: 7.366e-14}  
+Iteration 1:{space 3}EE criterion = {res: 9.189e-25}  
+{res}
+{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        27
+{txt:Estimator}{col 16}:{res: IPW regression adjustment}
+{txt:Outcome model}{col 16}:{res: Weibull}
+{txt:Treatment model}{col 16}:{res: logit}
+{txt:Censoring model}{col 16}:{res: none}
+{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 23}{c |}{col 35}    Robust
+{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
+{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}ATE                   {txt}{c |}
+{space 8}rec_vs_nonrec {c |}
+{space 12}(K vs J)  {c |}{col 23}{res}{space 2}    -5.45{col 35}{space 2}     7.84{col 46}{space 1}   -0.70{col 55}{space 3} 0.49{col 63}{space 4}   -20.81{col 76}{space 3}     9.91
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}POmean                {txt}{c |}
+{space 8}rec_vs_nonrec {c |}
+{space 19}J  {c |}{col 23}{res}{space 2}    34.21{col 35}{space 2}     6.76{col 46}{space 1}    5.06{col 55}{space 3} 0.00{col 63}{space 4}    20.97{col 76}{space 3}    47.46
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1                  {txt}{c |}
+meta_analysis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.45{col 35}{space 2}     0.35{col 46}{space 1}    1.26{col 55}{space 3} 0.21{col 63}{space 4}    -0.25{col 76}{space 3}     1.14
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.38{col 35}{space 2}     0.20{col 46}{space 1}   17.31{col 55}{space 3} 0.00{col 63}{space 4}     3.00{col 76}{space 3}     3.77
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1_lnshape          {txt}{c |}
+{space 16}_cons {c |}{col 23}{res}{space 2}     0.44{col 35}{space 2}     0.16{col 46}{space 1}    2.81{col 55}{space 3} 0.00{col 63}{space 4}     0.13{col 76}{space 3}     0.75
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME2                  {txt}{c |}
+meta_analysis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.25{col 35}{space 2}     0.34{col 46}{space 1}    0.74{col 55}{space 3} 0.46{col 63}{space 4}    -0.41{col 76}{space 3}     0.91
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.34{col 35}{space 2}     0.25{col 46}{space 1}   13.58{col 55}{space 3} 0.00{col 63}{space 4}     2.86{col 76}{space 3}     3.83
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME2_lnshape          {txt}{c |}
+{space 16}_cons {c |}{col 23}{res}{space 2}     0.72{col 35}{space 2}     0.18{col 46}{space 1}    4.13{col 55}{space 3} 0.00{col 63}{space 4}     0.38{col 76}{space 3}     1.07
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}TME2                  {txt}{c |}
+{space 16}field {c |}
+{space 13}Welface  {c |}{col 23}{res}{space 2}    -2.72{col 35}{space 2}     1.50{col 46}{space 1}   -1.82{col 55}{space 3} 0.07{col 63}{space 4}    -5.66{col 76}{space 3}     0.21
+{txt}{space 21} {c |}
+{space 4}synthesis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.74{col 35}{space 2}     1.26{col 46}{space 1}    0.59{col 55}{space 3} 0.56{col 63}{space 4}    -1.73{col 76}{space 3}     3.20
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}    -0.45{col 35}{space 2}     0.75{col 46}{space 1}   -0.61{col 55}{space 3} 0.54{col 63}{space 4}    -1.92{col 76}{space 3}     1.01
+{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{hline}
+{res}Analysis for: {ul:any_vs_none} with respect to {ul:resource}
+
+{txt}Iteration 0:{space 3}log likelihood = {res:-64.833159}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-64.658828}  
+Iteration 2:{space 3}log likelihood = {res:-64.635443}  
+Iteration 3:{space 3}log likelihood = {res:-64.622318}  (not concave)
+Iteration 4:{space 3}log likelihood = {res:-64.615451}  (not concave)
+Iteration 5:{space 3}log likelihood = {res:-64.613876}  (not concave)
+Iteration 6:{space 3}log likelihood = {res:-64.611442}  (not concave)
+Iteration 7:{space 3}log likelihood = {res:-64.608495}  (not concave)
+Iteration 8:{space 3}log likelihood = {res:-64.606269}  (not concave)
+Iteration 9:{space 3}log likelihood = {res:-64.603988}  (not concave)
+Iteration 10:{space 2}log likelihood = {res:-64.599064}  (not concave)
+Iteration 11:{space 2}log likelihood = {res:-64.595126}  (not concave)
+Iteration 12:{space 2}log likelihood = {res:-64.591376}  (not concave)
+Iteration 13:{space 2}log likelihood = {res:-64.587837}  (not concave)
+Iteration 14:{space 2}log likelihood = {res:-64.582943}  (not concave)
+Iteration 15:{space 2}log likelihood = {res:-64.576167}  (not concave)
+Iteration 16:{space 2}log likelihood = {res:-64.571282}  (not concave)
+Iteration 17:{space 2}log likelihood = {res:-64.566076}  (not concave)
+Iteration 18:{space 2}log likelihood = {res:-64.494094}  
+Iteration 19:{space 2}log likelihood = {res:-64.435494}  
+Iteration 20:{space 2}log likelihood = {res:-64.401709}  
+Iteration 21:{space 2}log likelihood = {res: -64.40114}  
+Iteration 22:{space 2}log likelihood = {res:-64.401134}  
+{res}
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        38
+{txt}{col 49}   Uncensored{col 67}= {res}        35
+{txt}{col 49}   Left-censored{col 67}= {res}         0
+{txt}{col 49}   Right-censored{col 67}= {res}         3
+{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     11.01
+{txt}Log likelihood = {res}-64.401134{txt}{col 49}Prob > chi2{col 67}= {res}    0.0041
+
+{txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 14}meta_analysis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     1.17{col 49}{space 2}     0.39{col 60}{space 1}    3.04{col 69}{space 3} 0.00{col 77}{space 4}     0.41{col 90}{space 3}     1.93
+{txt}{space 35} {c |}
+{space 24}any_vs_none {c |}
+{space 33}R  {c |}{col 37}{res}{space 2}     0.35{col 49}{space 2}     0.60{col 60}{space 1}    0.58{col 69}{space 3} 0.56{col 77}{space 4}    -0.83{col 90}{space 3}     1.52
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     5.49{col 49}{space 2}     0.35{col 60}{space 1}   15.74{col 69}{space 3} 0.00{col 77}{space 4}     4.81{col 90}{space 3}     6.17
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}any_vs_none                         {txt}{c |}
+{space 30}field {c |}
+{space 27}Welface  {c |}{col 37}{res}{space 2}    -0.71{col 49}{space 2}     0.35{col 60}{space 1}   -2.01{col 69}{space 3} 0.04{col 77}{space 4}    -1.41{col 90}{space 3}    -0.02
+{txt}{space 35} {c |}
+{space 18}synthesis_planned {c |}
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.42{col 49}{space 2}     0.37{col 60}{space 1}    1.14{col 69}{space 3} 0.26{col 77}{space 4}    -0.30{col 90}{space 3}     1.13
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}/any_vs_none                        {txt}{c |}
+{space 31}cut1 {c |}{col 37}{res}{space 2}     0.40{col 49}{space 2}     0.27{col 77}{space 4}    -0.13{col 90}{space 3}     0.92
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     1.26{col 49}{space 2}     0.54{col 77}{space 4}     0.54{col 90}{space 3}     2.93
+{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.any_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}    -0.94{col 49}{space 2}     0.10{col 60}{space 1}   -9.77{col 69}{space 3} 0.00{col 77}{space 4}    -1.00{col 90}{space 3}    -0.09
+{txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+(option {bf:mean} assumed; average structural function mean)
+{res}{txt}(4 missing values generated)
+
+                   Shapiro-Wilk W test for normal data
+
+    Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
+{hline 13}{c +}{hline 54}
+    __000005 {c |} {res}        35    0.98510      0.532    -1.318    0.90630
+{hline}
+Analysis for: {ul:any_vs_none} with respect to {ul:time}
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+
+{txt}Iteration 0:{space 3}EE criterion = {res: 5.338e-19}  
+Iteration 1:{space 3}EE criterion = {res: 1.740e-28}  
+{res}
+{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        39
+{txt:Estimator}{col 16}:{res: IPW regression adjustment}
+{txt:Outcome model}{col 16}:{res: Weibull}
+{txt:Treatment model}{col 16}:{res: logit}
+{txt:Censoring model}{col 16}:{res: none}
+{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 23}{c |}{col 35}    Robust
+{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
+{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}ATE                   {txt}{c |}
+{space 10}any_vs_none {c |}
+{space 12}(R vs Q)  {c |}{col 23}{res}{space 2}     1.41{col 35}{space 2}     8.90{col 46}{space 1}    0.16{col 55}{space 3} 0.87{col 63}{space 4}   -16.03{col 76}{space 3}    18.86
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}POmean                {txt}{c |}
+{space 10}any_vs_none {c |}
+{space 19}Q  {c |}{col 23}{res}{space 2}    35.67{col 35}{space 2}     5.22{col 46}{space 1}    6.84{col 55}{space 3} 0.00{col 63}{space 4}    25.45{col 76}{space 3}    45.90
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1                  {txt}{c |}
+meta_analysis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.57{col 35}{space 2}     0.26{col 46}{space 1}    2.18{col 55}{space 3} 0.03{col 63}{space 4}     0.06{col 76}{space 3}     1.09
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.38{col 35}{space 2}     0.16{col 46}{space 1}   21.13{col 55}{space 3} 0.00{col 63}{space 4}     3.07{col 76}{space 3}     3.70
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1_lnshape          {txt}{c |}
+{space 16}_cons {c |}{col 23}{res}{space 2}     0.51{col 35}{space 2}     0.11{col 46}{space 1}    4.76{col 55}{space 3} 0.00{col 63}{space 4}     0.30{col 76}{space 3}     0.72
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME2                  {txt}{c |}
+meta_analysis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     1.70{col 35}{space 2}     0.21{col 46}{space 1}    8.27{col 55}{space 3} 0.00{col 63}{space 4}     1.30{col 76}{space 3}     2.10
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     2.61{col 35}{space 2}     0.09{col 46}{space 1}   28.00{col 55}{space 3} 0.00{col 63}{space 4}     2.43{col 76}{space 3}     2.79
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME2_lnshape          {txt}{c |}
+{space 16}_cons {c |}{col 23}{res}{space 2}     1.07{col 35}{space 2}     0.26{col 46}{space 1}    4.13{col 55}{space 3} 0.00{col 63}{space 4}     0.56{col 76}{space 3}     1.58
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}TME2                  {txt}{c |}
+{space 16}field {c |}
+{space 13}Welface  {c |}{col 23}{res}{space 2}    -1.34{col 35}{space 2}     0.72{col 46}{space 1}   -1.86{col 55}{space 3} 0.06{col 63}{space 4}    -2.75{col 76}{space 3}     0.07
+{txt}{space 21} {c |}
+{space 4}synthesis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.84{col 35}{space 2}     0.71{col 46}{space 1}    1.17{col 55}{space 3} 0.24{col 63}{space 4}    -0.56{col 76}{space 3}     2.24
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}    -0.64{col 35}{space 2}     0.57{col 46}{space 1}   -1.12{col 55}{space 3} 0.26{col 63}{space 4}    -1.76{col 76}{space 3}     0.48
+{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
 {com}. 
 . // TODO: Plot the Kaplan Meier like so:
 . // TODO: The colors and their ordering come from: https://www.stata.com/statalist/archive/2011-02/msg00692.html
@@ -410,20 +718,320 @@ Iteration 3:{space 3}log likelihood = {res:-53.235122}
 {txt}end of do-file
 
 {com}. 
-. * // Make figures
-. * do figures/figures
-. 
-. * // Obtain the git revision hash, which is used in the reports.
-. * tempfile git_revision_filename
-. * tempname revision_file
-. * shell git rev-parse --short HEAD > "`git_revision_filename'"
-. * file open `revision_file' using `git_revision_filename', read text
-. * file read `revision_file' line
-. * global git_revision = "`macval(line)'"
-. 
-. * // Make the report.
-. * do reports/report
-. 
+. // Make figures
+. do figures/figures
+{txt}
+{com}. version 16.1
+{txt}
+{com}. set graphics off
+{txt}
+{com}. 
+. // Specify options for the KM plots.
+. local opts        ci ci1opts(fcolor(navy%20)) ci2opts(fcolor(maroon%20)) // Translucent CI bands.
+{txt}
+{com}. local opts `opts' risktable(, title("Incomplete Reviews"))               // Title.
+{txt}
+{com}. local opts `opts' risktable(, rowtitle("Blinded 1") group(1))            // TODO: Specify the rowtitle after unblinding.
+{txt}
+{com}. local opts `opts' risktable(, rowtitle("Blinded 2") group(2))            // TODO: Specify the rowtitle after unblinding.
+{txt}
+{com}. local opts `opts' censored(number)                                       // Indicate number of censorings.
+{txt}
+{com}. local opts `opts' xtitle("Weeks After Review Commission")                // X-axis title.
+{txt}
+{com}. local opts `opts' ylabel(0 "0%" 0.25 "25%" 0.5 "50%" 0.75 "75%" 1 "100%", angle(0) nogrid) // Y-axis ticks etc.
+{txt}
+{com}. local opts `opts' ytitle("Incomplete Reviews (95% CI)")
+{txt}
+{com}. 
+. // Make a Kaplan-Meier plot for each comparison.
+. foreach comparison of global comparisons {c -(}  
+{txt}  2{com}.   // Get the name of the comparison for the filename and figure title.
+.   local comparison_name : variable label `comparison'
+{txt}  3{com}.   local title "Time-to-completion for `comparison_name'"
+{txt}  4{com}. 
+.   // Make the figure.
+.   sts graph , by(`comparison') `opts' title("Time-to-completion for" "`comparison_name'")
+{txt}  5{com}.   
+.   // Save the figure in the required formats.
+.   foreach format in /*png*/ pdf {c -(} // TODO: Add png and TIFF with compression via sips.
+{txt}  6{com}.     local width ""
+{txt}  7{com}.     if "`format'" == "png" local width width(3000)
+{txt}  8{com}.     local filename "products/Time-to-completion for `comparison_name'.`format'"
+{txt}  9{com}.     graph export "`filename'" , `width' replace
+{txt} 10{com}.   {c )-}
+{txt} 11{com}. {c )-}
+
+         {txt}failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(file products/Time-to-completion for Recommended vs No ML Use.pdf written in PDF format)
+
+         failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(file products/Time-to-completion for Recommended vs Ron-recommended ML Use.pdf written in PDF format)
+
+         failure _d:  {res}completed
+   {txt}analysis time _t:  {res}(completion-origin)/7
+             {txt}origin:  {res}time commission
+{txt}(file products/Time-to-completion for Any vs No ML Use.pdf written in PDF format)
+
+{com}. 
+. set graphics on
+{txt}
+{com}. 
 {txt}end of do-file
+
+{com}. 
+. // Obtain the git revision hash, which is used in the reports.
+. tempfile git_revision_filename
+{txt}
+{com}. tempname revision_file
+{txt}
+{com}. shell git rev-parse --short HEAD > "`git_revision_filename'"
+{txt}
+
+{com}. file open `revision_file' using `git_revision_filename', read text
+{txt}
+{com}. file read `revision_file' line
+{txt}
+{com}. global git_revision = "`macval(line)'"
+{txt}
+{com}. 
+. // Make the report.
+. do reports/report
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. // Some locals to make this file a little more readable.
+. local heading putdocx paragraph, style(Heading1)
+{txt}
+{com}. local subhead putdocx paragraph, style(Heading2)
+{txt}
+{com}. local newpara putdocx textblock begin, halign(both)
+{txt}
+{com}. local putdocx textblock end putdocx textblock end
+{txt}
+{com}. 
+. local p_fmt  %5.2f // Format used for P-values.
+{txt}
+{com}. local e_fmt  %5.2f // Format used for estimates.
+{txt}
+{com}. local pc_fmt %8.1f // Format used for percentages.
+{txt}
+{com}. 
+. // Start the document.
+. putdocx begin
+{res}{txt}
+{com}. 
+. // Title.
+. putdocx paragraph, style(Title)
+{res}{txt}
+{com}. putdocx text ("The effect of machine learning tools for evidence synthesis on resource use and time-to-completion")
+{res}{txt}
+{com}. 
+. // Author and revision information.
+. `newpara'
+{res}{txt}
+{com}. `newpara'
+{res}{txt}
+{com}. 
+. // Methods section
+. `heading'
+{res}{txt}
+{com}. putdocx text ("Methods")
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. // Results section
+. `heading'
+{res}{txt}
+{com}. putdocx text ("Results")
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. // References
+. `heading'
+{res}{txt}
+{com}. putdocx text ("References")
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. // Appendices
+. 
+. `heading'
+{res}{txt}
+{com}. putdocx text ("Appendix 1 — Protocol Deviations")
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. `heading'
+{res}{txt}
+{com}. putdocx text ("Appendix 2 — Full Regression Results")
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. // Save the report to the specified filename.
+. putdocx save "${c -(}report_filename{c )-}", replace
+{res}successfully replaced {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/report.docx"}
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. 
+{txt}end of do-file
+
+{com}. list product_type 
+{txt}
+     {c TLC}{hline 10}{c TRC}
+     {c |} {res}produc~e {txt}{c |}
+     {c LT}{hline 10}{c RT}
+  1. {c |} {res}      RR {txt}{c |}
+  2. {c |} {res}     EGM {txt}{c |}
+  3. {c |} {res}     EGM {txt}{c |}
+  4. {c |} {res}      SR {txt}{c |}
+  5. {c |} {res}      SR {txt}{c |}
+     {c LT}{hline 10}{c RT}
+  6. {c |} {res}      SR {txt}{c |}
+  7. {c |} {res}      SR {txt}{c |}
+  8. {c |} {res}      SR {txt}{c |}
+  9. {c |} {res}      SR {txt}{c |}
+ 10. {c |} {res}      SR {txt}{c |}
+     {c LT}{hline 10}{c RT}
+ 11. {c |} {res}      MR {txt}{c |}
+ 12. {c |} {res}     HTA {txt}{c |}
+ 13. {c |} {res}     HTA {txt}{c |}
+ 14. {c |} {res}      MR {txt}{c |}
+ 15. {c |} {res}      RR {txt}{c |}
+     {c LT}{hline 10}{c RT}
+ 16. {c |} {res}      MR {txt}{c |}
+ 17. {c |} {res}      SR {txt}{c |}
+ 18. {c |} {res}      RR {txt}{c |}
+ 19. {c |} {res}      RR {txt}{c |}
+ 20. {c |} {res}      SR {txt}{c |}
+     {c LT}{hline 10}{c RT}
+ 21. {c |} {res}     HTA {txt}{c |}
+ 22. {c |} {res}     EGM {txt}{c |}
+ 23. {c |} {res}     EGM {txt}{c |}
+ 24. {c |} {res}     EGM {txt}{c |}
+ 25. {c |} {res}     EGM {txt}{c |}
+     {c LT}{hline 10}{c RT}
+ 26. {c |} {res}     EGM {txt}{c |}
+ 27. {c |} {res}     EGM {txt}{c |}
+ 28. {c |} {res}     HTA {txt}{c |}
+ 29. {c |} {res}     EGM {txt}{c |}
+ 30. {c |} {res}      SR {txt}{c |}
+     {c LT}{hline 10}{c RT}
+ 31. {c |} {res}      RR {txt}{c |}
+ 32. {c |} {res}      RR {txt}{c |}
+ 33. {c |} {res}     HTA {txt}{c |}
+ 34. {c |} {res}     HTA {txt}{c |}
+ 35. {c |} {res}      RR {txt}{c |}
+     {c LT}{hline 10}{c RT}
+ 36. {c |} {res}      RR {txt}{c |}
+ 37. {c |} {res}      RR {txt}{c |}
+ 38. {c |} {res}      MR {txt}{c |}
+ 39. {c |} {res}     HTA {txt}{c |}
+     {c BLC}{hline 10}{c BRC}
+
+{com}. codebook product_type 
+
+{txt}{hline}
+{res}product_type{right:Type of product}
+{txt}{hline}
+
+{col 19}type:  numeric ({res}long{txt})
+{ralign 22:label}:  {res:product_type}
+
+{col 18}range:  [{res}1{txt},{res}5{txt}]{col 55}units:  {res}1
+{col 10}{txt}unique values:  {res}5{col 51}{txt}missing .:  {res}0{txt}/{res}39
+
+{txt}{col 13}tabulation:  Freq.   Numeric  Label
+{col 21}{res}         9{col 33}       1{col 43}{txt}EGM
+{col 21}{res}         7{col 33}       2{col 43}{txt}HTA
+{col 21}{res}         4{col 33}       3{col 43}{txt}MR
+{col 21}{res}         9{col 33}       4{col 43}{txt}RR
+{col 21}{res}        10{col 33}       5{col 43}{txt}SR
+
+{com}. desc
+
+{txt}Contains data
+  obs:{res}            39                          
+{txt} vars:{res}            34                          
+{txt}{hline}
+              storage   display    value
+variable name   type    format     label      variable label
+{hline}
+{p 0 48}{res}{bind:ReviewID       }{txt}{bind: str2    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}Review ID{p_end}
+{p 0 48}{bind:Kontanktpunkt  }{txt}{bind: str12   }{bind:{txt}%12s      }{space 1}{bind:         }{bind:  }{res}{res}Kontanktpunkt{p_end}
+{p 0 48}{bind:Reviewshortname}{txt}{bind: str105  }{bind:{txt}%105s     }{space 1}{bind:         }{bind:  }{res}{res}Review short name{p_end}
+{p 0 48}{bind:TitleEnglish   }{txt}{bind: str188  }{bind:{txt}%188s     }{space 1}{bind:         }{bind:  }{res}{res}Title (English){p_end}
+{p 0 48}{bind:TittelNorsk    }{txt}{bind: str178  }{bind:{txt}%178s     }{space 1}{bind:         }{bind:  }{res}{res}Tittel (Norsk){p_end}
+{p 0 48}{bind:year           }{txt}{bind: int     }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Year{p_end}
+{p 0 48}{bind:field          }{txt}{bind: long    }{bind:{txt}%10.0g    }{space 1}{bind:field    }{bind:  }{res}{res}Area (Health or Welfare){p_end}
+{p 0 48}{bind:product_type   }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}product_type{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Type of product{p_end}
+{p 0 48}{bind:update         }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{bind:update   }{bind:  }{res}{res}Update (Y/N){p_end}
+{p 0 48}{bind:hta            }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{bind:hta      }{bind:  }{res}{res}HTA (Y or N){p_end}
+{p 0 48}{bind:rec_vs_none    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_none{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Recommended vs No ML Use{p_end}
+{p 0 48}{bind:rec_vs_nonrec  }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_nonrec{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Recommended vs Ron-recommended ML Use{p_end}
+{p 0 48}{bind:any_vs_none    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}any_vs_none{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Any vs No ML Use{p_end}
+{p 0 48}{bind:rec_vs_under   }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_under{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Recom vs under-use{p_end}
+{p 0 48}{bind:rec_vs_over    }{txt}{bind: long    }{bind:{txt}%8.0g     }{space 1}{txt}rec_vs_over{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Recom vs over-use{p_end}
+{p 0 48}{bind:synthesis_pla~d}{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was any synthesis planned?{p_end}
+{p 0 48}{bind:meta_analysis~d}{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was meta-analysis planned?{p_end}
+{p 0 48}{bind:nma_planned    }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:planned  }{bind:  }{res}{res}Was NMA planned?{p_end}
+{p 0 48}{bind:completed      }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{txt}completed{p_end}
+{p 0 48}{space 44}{bind:  }{res}{res}Report completed?{p_end}
+{p 0 48}{bind:log_resource1  }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Resource use (log person-hours){p_end}
+{p 0 48}{bind:log_resource2  }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}Resource use (log person-hours); possibly censored{p_end}
+{p 0 48}{bind:commission     }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:completion     }{txt}{bind: float   }{bind:{txt}%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:_est_rec_vs_n..}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_rec~e_time}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est~c_resource}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_rec~c_time}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_any_vs_~ce}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_st            }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}1 if record is to be used; 0 otherwise{p_end}
+{p 0 48}{bind:_d             }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}1 if failure; 0 if censored{p_end}
+{p 0 48}{bind:_origin        }{txt}{bind: int     }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Evaluated value of origin(){p_end}
+{p 0 48}{bind:_t             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Analysis time when record ends{p_end}
+{p 0 48}{bind:_t0            }{txt}{bind: byte    }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}Analysis time when record begins{p_end}
+{p 0 48}{bind:_est_any_vs_~me}{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{txt}{hline}
+Sorted by: 
+{res}     Note: Dataset has changed since last saved.
+
+{com}. codebook nma_planned
+
+{txt}{hline}
+{res}nma_planned{right:Was NMA planned?}
+{txt}{hline}
+
+{col 19}type:  numeric ({res}float{txt})
+{ralign 22:label}:  {res:planned}
+
+{col 18}range:  [{res}0{txt},{res}0{txt}]{col 55}units:  {res}1
+{col 10}{txt}unique values:  {res}1{col 51}{txt}missing .:  {res}0{txt}/{res}39
+
+{txt}{col 13}tabulation:  Freq.   Numeric  Label
+{col 21}{res}        39{col 33}       0{col 43}{txt}No
 
 {com}. 
