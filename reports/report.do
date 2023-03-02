@@ -50,6 +50,8 @@ putdocx textblock end
 `heading'
 putdocx text ("Results")
 
+results_table
+
 `newpara'
 TODO: Add results.
 putdocx textblock end

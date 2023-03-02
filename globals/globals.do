@@ -7,6 +7,8 @@ global signature "39:28(17933):3819763061:1092073612"
 
 global random_seed 1234
 
+global p_threshold 0.0001
+
 global report_filename "products/ml-resource-time-report.docx"
 
 // Define the comparisons specified in the protocol published in the journal.
