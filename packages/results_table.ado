@@ -20,8 +20,6 @@ program results_table
     time_row `comparison' , frame(`frame')
   }
 
-  frame `frame': list // TODO: Remove
-
   // Make the table of main results.
   local note        ¹Data are means of samples restricted to completed reviews and may underestimate
   local note `note' resource use (person-hours) and time-to-completion (weeks) due to 
