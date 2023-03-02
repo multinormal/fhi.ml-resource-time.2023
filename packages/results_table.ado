@@ -21,6 +21,28 @@ program results_table
   }
 
   frame `frame': list // TODO: Remove
+
+  // Make the table of main results.
+  local note TODO
+  frame `frame' {
+    putdocx table results = data(*), varnames note("`note'") border(all, nil) layout(autofitcontents)
+    // Format the table.
+    putdocx table results(1,1) = ("Type of ML Use")
+    putdocx table results(1,2) = ("Reviews")
+    putdocx table results(1,3) = ("Sample Mean")
+    putdocx table results(1,4) = ("Effect Estimate")
+    putdocx table results(1,5) = ("p-value")
+    putdocx table results(2,3) = ("Person-hours")
+    putdocx table results(9,3) = ("Weeks")
+    putdocx table results(1,.), border(top)
+    putdocx table results(1 2 8 9,.), border(bottom)
+    putdocx table results(4 6 11 13, .), border(bottom)
+    local end = _N + 1
+    putdocx table results(`end',.), border(bottom)
+    putdocx table results(.,.), font("Calibri (Body)", 8)
+    putdocx table results(1,.), bold
+    putdocx table results(2 9,1), bold
+  }
 end
 
 program section_row
