@@ -27,5 +27,5 @@ global resource_outcome log_resource1 log_resource2 // TODO: Change to non-log!
 global adj_var i.meta_analysis_planned
 
 // Specify the model for endogeneous treatment assignment.
-// TODO: Check if synthesis_planned corresponds to pre-specification. Waiting on a reply from Jose.
-global endo_vars i.field i.synthesis_planned
+// TODO: Check if synthesis_planned corresponds to pre-specification. No, but waiting on a reply from Jose.
+global endo_vars i.field // TODO: i.synthesis_planned Removed as no evidence of endogeneicity for this variable.
