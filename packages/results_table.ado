@@ -65,7 +65,7 @@ program resource_row
   // Get the Ns and sample means for the levels of the comparison and the level names.
   forvalues i = 1/2 {
     local this_level : word `i' of `levels'
-    summarize log_resource1 if `comparison' == `this_level' & completed // TODO: Document that the sample means are restricted to completed reviews.
+    summarize log_resource1 if `comparison' == `this_level' & completed
     local n_`i' : disp `r(N)'
     local mean_`i' = exp(r(mean))
     local mean_`i' : disp %3.0f `mean_`i''
@@ -99,7 +99,7 @@ program time_row
   // Get the Ns and sample means for the levels of the comparison and the level names.
   forvalues i = 1/2 {
     local this_level : word `i' of `levels'
-    summarize _t if `comparison' == `this_level' & completed // TODO: Document that the sample means are restricted to completed reviews.
+    summarize _t if `comparison' == `this_level' & completed
     local n_`i' : disp `r(N)'
     local mean_`i' = r(mean)
     local mean_`i' : disp %3.1f `mean_`i''
