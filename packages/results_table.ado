@@ -3,6 +3,9 @@ version 16.1
 program results_table
   tempname frame
   frame create `frame' strL(type n mean es p)
+
+  // Resource use section.
+  section_row , frame(`frame') title("Resource Use")
   
   // Insert resource use rows into the table.
   foreach comparison of global comparisons {
@@ -10,6 +13,11 @@ program results_table
   }
 
   // TODO: Insert time-to-completion rows into the table.
+end
+
+program section_row
+  syntax , frame(name local) title(string)
+  frame post `frame' ("`title'") ("") ("") ("") ("")
 end
 
 program resource_row
