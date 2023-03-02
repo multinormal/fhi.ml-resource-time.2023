@@ -23,14 +23,19 @@ program results_table
   frame `frame': list // TODO: Remove
 
   // Make the table of main results.
-  local note TODO
+  local note        ¹Data are means of samples restricted to completed reviews and may underestimate
+  local note `note' resource use (person-hours) and time-to-completion (weeks) due to 
+  local note `note' right-censoring of ongoing projects. ²Estimates are relative
+  local note `note' resource use and relative time-to-completion, account for right-censored outcomes
+  local note `note' and nonrandom endogenous treatment allocation, and are adjusted for planned
+  local note `note' meta-analysis.
   frame `frame' {
     putdocx table results = data(*), varnames note("`note'") border(all, nil) layout(autofitcontents)
     // Format the table.
     putdocx table results(1,1) = ("Type of ML Use")
     putdocx table results(1,2) = ("Reviews")
-    putdocx table results(1,3) = ("Sample Mean")
-    putdocx table results(1,4) = ("Effect Estimate")
+    putdocx table results(1,3) = ("Sample Mean¹")
+    putdocx table results(1,4) = ("Effect Estimate²")
     putdocx table results(1,5) = ("p-value")
     putdocx table results(2,3) = ("Person-hours")
     putdocx table results(9,3) = ("Weeks")
