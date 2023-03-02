@@ -50,11 +50,18 @@ putdocx textblock end
 `heading'
 putdocx text ("Results")
 
+// Insert the table of results.
 results_table
 
-`newpara'
-TODO: Add results.
-putdocx textblock end
+// Insert the Kaplan-Meier plots.
+foreach comparison of global comparisons {
+  local comparison_name : variable label `comparison'
+  local title "Kaplan-Meier estimates for `comparison_name'"
+
+  `subhead'
+  putdocx text ("`title'")
+  putdocx image "products/Time-to-completion for `comparison_name'.png", linebreak
+}
 
 // References
 `heading'

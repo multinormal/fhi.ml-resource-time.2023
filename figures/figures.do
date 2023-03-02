@@ -15,13 +15,12 @@ local opts `opts' ytitle("Completed Reviews (95% CI)")
 foreach comparison of global comparisons {  
   // Get the name of the comparison for the filename and figure title.
   local comparison_name : variable label `comparison'
-  local title "Time-to-completion for `comparison_name'"
 
   // Make the figure.
-  sts graph , failure by(`comparison') `opts' title("Time-to-completion for" "`comparison_name'")
+  sts graph , failure by(`comparison') `opts' title("")
   
   // Save the figure in the required formats.
-  foreach format in /*png*/ pdf { // TODO: Add png and TIFF with compression via sips.
+  foreach format in png pdf { // TODO: Add TIFF with compression via sips.
     local width ""
     if "`format'" == "png" local width width(3000)
     local filename "products/Time-to-completion for `comparison_name'.`format'"
