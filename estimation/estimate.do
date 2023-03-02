@@ -12,7 +12,7 @@ foreach comparison of global comparisons {
     estimates store `comparison'_`outcome'
 
     // Compute and test residuals for normality for eintreg.
-    if "`e(cmd)'" == "eintreg" {
+    if regexm("`e(cmd)'", "intreg") { // Match eintreg and intreg.
       tempvar y_hat resid
       predict `y_hat'
       local y : word 1 of `e(depvar)'
