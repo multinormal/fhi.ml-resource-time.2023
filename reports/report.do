@@ -87,9 +87,18 @@ putdocx textblock end
 `heading'
 putdocx text ("Appendix 2 — Full Regression Results")
 
-`newpara'
-TODO: Present full regression tables.
-putdocx textblock end
+foreach comparison of global comparisons {
+  foreach outcome of global outcomes {
+    `subhead'
+    putdocx text ("Regression results for `comparison' with respect to `outcome'")
+
+    estimates restore `comparison'_`outcome'
+    estimates replay `comparison'_`outcome'
+    putdocx table `comparison'_`outcome' = etable
+  }
+}
+
+
 
 // Save the report to the specified filename.
 putdocx save "${report_filename}", replace
