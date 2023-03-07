@@ -7,7 +7,9 @@ global signature "39:28(17933):3819763061:1092073612"
 
 global random_seed 1234
 
-global report_filename "products/report.docx"
+global p_threshold 0.0001
+
+global report_filename "products/ml-resource-time-report.docx"
 
 // Define the comparisons specified in the protocol published in the journal.
 global comparisons rec_vs_none rec_vs_nonrec any_vs_none 
@@ -25,5 +27,5 @@ global resource_outcome log_resource1 log_resource2 // TODO: Change to non-log!
 global adj_var i.meta_analysis_planned
 
 // Specify the model for endogeneous treatment assignment.
-// TODO: Check if synthesis_planned corresponds to pre-specification. Waiting on a reply from Jose.
-global endo_vars i.field i.synthesis_planned
+// TODO: Check if synthesis_planned corresponds to pre-specification. No, but waiting on a reply from Jose.
+global endo_vars i.field // TODO: i.synthesis_planned Removed as no evidence of endogeneicity for this variable.

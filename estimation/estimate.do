@@ -12,7 +12,7 @@ foreach comparison of global comparisons {
     estimates store `comparison'_`outcome'
 
     // Compute and test residuals for normality for eintreg.
-    if "`e(cmd)'" == "eintreg" {
+    if regexm("`e(cmd)'", "intreg") { // Match eintreg and intreg.
       tempvar y_hat resid
       predict `y_hat'
       local y : word 1 of `e(depvar)'
@@ -22,7 +22,3 @@ foreach comparison of global comparisons {
     }
   }
 }
-
-// TODO: Plot the Kaplan Meier like so:
-// TODO: The colors and their ordering come from: https://www.stata.com/statalist/archive/2011-02/msg00692.html
-// sts graph , by(rec_vs_none) ci risktable censored(number) ci1opts(fcolor(navy%20)) ci2opts(fcolor(maroon%20))

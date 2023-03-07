@@ -38,10 +38,11 @@ inverse-probability-weighted regression adjustment (LAC-IPWRA; stteffects) model
 difference in time-to-completion. Ongoing reviews were right censored at the end of data collection 
 (31 January 2023). All analyses accounted for right-censored outcomes and 
 for nonrandom endogenous treatment allocation, which was modelled in terms of review field (welfare 
-or healthcare) and whether any evidence synthesis (quantitative or qualitative) was planned. We 
+or healthcare) and whether any evidence synthesis (quantitative or qualitative) was planned. We had 
+no reason to suspect informative (nonrandom) censoring, so did not model a censoring mechanism. We 
 re-expressed the estimates as ratios (relative resource use and relative time-to-completion) to aid 
 generalization to other institutions. We present two-sided 95% confidence intervals and p-values 
-where appropriate and interpret p-values less than 0.05 to be statistically significant. We also 
+where appropriate and use a prespecified p < 0.05 significance criterion throughout. We also 
 present the time-to-completion data using Kaplan-Meier estimates of survivor functions.
 putdocx textblock end
 
@@ -49,9 +50,18 @@ putdocx textblock end
 `heading'
 putdocx text ("Results")
 
-`newpara'
-TODO: Add results.
-putdocx textblock end
+// Insert the table of results.
+results_table
+
+// Insert the Kaplan-Meier plots.
+foreach comparison of global comparisons {
+  local comparison_name : variable label `comparison'
+  local title "Kaplan-Meier estimates for `comparison_name'"
+
+  `subhead'
+  putdocx text ("`title'")
+  putdocx image "products/Time-to-completion for `comparison_name'.png", linebreak
+}
 
 // References
 `heading'
@@ -77,9 +87,18 @@ putdocx textblock end
 `heading'
 putdocx text ("Appendix 2 — Full Regression Results")
 
-`newpara'
-TODO: Present full regression tables.
-putdocx textblock end
+foreach comparison of global comparisons {
+  foreach outcome of global outcomes {
+    `subhead'
+    putdocx text ("Regression results for `comparison' with respect to `outcome'")
+
+    estimates restore `comparison'_`outcome'
+    estimates replay `comparison'_`outcome'
+    putdocx table `comparison'_`outcome' = etable
+  }
+}
+
+
 
 // Save the report to the specified filename.
 putdocx save "${report_filename}", replace
