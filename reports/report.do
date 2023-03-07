@@ -31,24 +31,43 @@ putdocx textblock end
 putdocx text ("Methods")
 
 `newpara'
-Except as noted below, we analyzed the data as specified in the protocol using Stata 16 (StataCorp LLC, College 
-Station, Texas, USA). Briefly, we analyzed resource use (person-hours) on the log scale 
-using extended interval regression (eintreg) and used a likelihood-adjusted-censoring 
-inverse-probability-weighted regression adjustment model (LAC-IPWRA; stteffects) to estimate mean 
-differences in time-to-completion. Ongoing reviews were right censored at the end of data collection 
-(31 January 2023) and all analyses accounted for this censoring. We had no reason to suspect informative 
+Except as noted, all statistical analyses were performed as specified in our protocol 
+using Stata 16 (StataCorp LLC, College Station, Texas, USA). Briefly, we analyzed 
+resource use (person-hours) on the log scale using extended interval regression (eintreg) 
+and used a likelihood-adjusted-censoring inverse-probability-weighted regression 
+adjustment model (LAC-IPWRA; stteffects) to estimate mean differences in time-to-completion. 
+Ongoing reviews were right censored at the end of data collection (31 January 2023) and 
+all analyses accounted for this censoring. We had no reason to suspect informative 
 (nonrandom) censoring, so did not model a censoring mechanism. Because we did not 
-randomize reviews to use recommended ML versus no ML (for example), we modelled ML use as an endogenously 
-assigned treatment predicted by field (healthcare or welfare) and pre-specification (existence 
-of a protocol), as planned, in all analyses except that for the secondary analysis recommended versus 
-non-recommended ML use with respect to resource use. While there was some statistically significant evidence 
-of endogeneity from the corresponding time-to-completion analysis and an exploratory logistic regression, the estimate of 
-relative resource use obtained using the planned model appeared to dramatically overestimate the 
-effect of recommended ML use. We therefore used a model for this analysis that did not account for 
-possible endogeneity. We re-expressed all estimates as ratios (relative resource use and relative 
-time-to-completion) to aid generalization to other institutions. We present two-sided 95% confidence 
-intervals and p-values where appropriate and use a prespecified p < 0.05 significance criterion 
-throughout. We also present the time-to-completion data using Kaplan-Meier estimates of survivor functions.
+randomize reviews to use recommended ML versus no ML (for example), we modelled ML use 
+as an endogenously assigned treatment predicted by field (healthcare or welfare) and 
+pre-specification (existence of a protocol), as planned, in all but one analysis (see 
+Protocol Deviations). We re-expressed all estimates as ratios (relative resource use and 
+relative time-to-completion) to aid generalization to other institutions. We present 
+two-sided 95% confidence intervals and p-values where appropriate and use a 
+prespecified p < 0.05 significance criterion throughout. We also present the 
+time-to-completion data using Kaplan-Meier estimates of survivor functions.
+putdocx textblock end
+
+`heading'
+putdocx text ("Protocol Deviations")
+
+`newpara'
+We had planned to model ML use as an endogenously assigned treatment in all analyses. However, 
+we chose to deviate from protocol for the secondary analysis of recommended versus 
+non-recommended ML use for the outcome of resource use. While there was some statistically 
+significant evidence of endogeneity from the corresponding time-to-completion analysis and 
+an exploratory logistic regression, the estimate of relative resource use obtained using the 
+planned model appeared to dramatically overestimate the effect of recommended ML use. We 
+therefore used a model for this analysis that did not account for possible endogeneity.
+putdocx textblock end
+
+`newpara'
+We updated the preprint version of the protocol during data extraction but before starting the 
+analysis or unblinding the statistician (CJR) to redefine the comparisons in terms of under- and 
+overuse of machine learning. However, only two reviews were judged to have 
+under- or overused machine learning, so it was not possible to perform the revised analyses. We 
+therefore performed and report the analyses as originally planned.
 putdocx textblock end
 
 // Start a new page.
@@ -74,29 +93,8 @@ foreach comparison of global comparisons {
   putdocx image "products/Time-to-completion for `comparison_name'.png", linebreak
 }
 
-// References
 `heading'
-putdocx text ("References")
-
-`newpara'
-TODO: Add references.
-putdocx textblock end
-
-// Appendices
-
-`heading'
-putdocx text ("Appendix 1 — Protocol Deviations")
-
-`newpara'
-We updated the preprint version of the protocol during data extraction but before starting the 
-analysis or unblinding the statistician (CJR) to redefine the comparisons in terms of under- and 
-overuse of machine learning (TODO: Cite revision). However, only two reviews were judged to have 
-under- or overused machine learning, so it was not possible to perform the revised analyses. We 
-therefore performed and report the analyses as originally planned.
-putdocx textblock end
-
-`heading'
-putdocx text ("Appendix 2 — Full Regression Results")
+putdocx text ("Appendix — Full Regression Results")
 
 foreach comparison of global comparisons {
   foreach outcome of global outcomes {
@@ -108,8 +106,6 @@ foreach comparison of global comparisons {
     putdocx table `comparison'_`outcome' = etable
   }
 }
-
-
 
 // Save the report to the specified filename.
 putdocx save "${report_filename}", replace

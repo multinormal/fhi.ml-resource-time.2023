@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res} 7 Mar 2023, 15:21:13
+ {txt}opened on:  {res} 7 Mar 2023, 15:48:11
 {txt}
 {com}. 
 . // Set up globals.
@@ -33,15 +33,13 @@
 . // Define the comparisons specified in the protocol published in the journal.
 . global comparisons rec_vs_none rec_vs_nonrec any_vs_none 
 {txt}
-{com}. // TODO: Report that we are dropping recommended versus over- underuse comparisons
-. // TODO: (i.e., those specified in the revised preprint), as only 2 observations in one of the groups for each of these.
-. 
+{com}. 
 . // Define the outcomes.
 . global outcomes resource time
 {txt}
 {com}. 
 . // Define the outcome variables.
-. global resource_outcome log_resource1 log_resource2 // TODO: Change to non-log!
+. global resource_outcome log_resource1 log_resource2
 {txt}
 {com}. // Note: No need to specify outcomes for stset data.
 . 
@@ -50,7 +48,7 @@
 {txt}
 {com}. 
 . // Specify the model for endogeneous treatment assignment.
-. global endo_vars i.field i.prespecified // TODO: Check for evidence of endogenicity for these variables.
+. global endo_vars i.field i.prespecified
 {txt}
 {com}. 
 {txt}end of do-file
@@ -174,7 +172,7 @@
 {txt}
 {com}. 
 . // Define treatment variables.
-. // TODO: Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
+. // Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
 . local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
 {txt}
 {com}. local RecommendedvsNone     rec_vs_none   // New variable name.
@@ -845,6 +843,17 @@ meta_analysis_planned {c |}
 . `newpara'
 {res}{txt}
 {com}. 
+. `heading'
+{res}{txt}
+{com}. putdocx text ("Protocol Deviations")
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
 . // Start a new page.
 . putdocx pagebreak
 {res}{txt}
@@ -1006,28 +1015,9 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {txt}  7{com}. {c )-}
 {res}{txt}
 {com}. 
-. // References
 . `heading'
 {res}{txt}
-{com}. putdocx text ("References")
-{res}{txt}
-{com}. 
-. `newpara'
-{res}{txt}
-{com}. 
-. // Appendices
-. 
-. `heading'
-{res}{txt}
-{com}. putdocx text ("Appendix 1 — Protocol Deviations")
-{res}{txt}
-{com}. 
-. `newpara'
-{res}{txt}
-{com}. 
-. `heading'
-{res}{txt}
-{com}. putdocx text ("Appendix 2 — Full Regression Results")
+{com}. putdocx text ("Appendix — Full Regression Results")
 {res}{txt}
 {com}. 
 . foreach comparison of global comparisons {c -(}
@@ -1218,8 +1208,6 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}
 {com}. 
-. 
-. 
 . // Save the report to the specified filename.
 . putdocx save "${c -(}report_filename{c )-}", replace
 {res}successfully replaced {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx"}
