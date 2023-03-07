@@ -21,12 +21,11 @@ program results_table
   }
 
   // Make the table of main results.
-  local note        ¹Data are means of samples restricted to completed reviews and may underestimate
-  local note `note' resource use (person-hours) and time-to-completion (weeks) due to 
-  local note `note' right-censoring of ongoing projects. ²Estimates are relative
+  local note        ¹Data are means of samples restricted to completed (uncensored) reviews. ²Estimates are relative
   local note `note' resource use and relative time-to-completion, account for right-censored outcomes
-  local note `note' and nonrandom endogenous treatment allocation, and are adjusted for planned
-  local note `note' meta-analysis.
+  local note `note' and, except for the recommended versus non-recommended ML use comparison for the
+  local note `note' outcome resource use, also account for nonrandom endogenous treatment allocation.
+  local note `note' All estimates are adjusted for planned meta-analysis.
   frame `frame' {
     putdocx table results = data(*), varnames note("`note'") border(all, nil) layout(autofitcontents)
     // Format the table.
@@ -76,7 +75,7 @@ program resource_row
   estimate restore `comparison'_resource
   local contrast : word 2 of `levels' // TODO: After unblinding, replace this with known base levels via fvset or similar.
   lincom `contrast'.`comparison' , eform
-  local estimate : disp %3.2f `r(estimate)' " (" %3.2f `r(lb)' " to " %3.2f `r(ub)' ")"
+  local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
 
   // Get the p-value.
   if r(p) < ${p_threshold} local p "<${p_threshold}"
@@ -112,7 +111,7 @@ program time_row
   estimate restore `comparison'_time
   nlcom log(_b[ATE:r2vs1.`comparison'] + _b[POmean:1.`comparison']) - log(_b[POmean:1.`comparison']), post
   lincom _nl_1 , eform
-  local estimate : disp %3.2f `r(estimate)' " (" %3.2f `r(lb)' " to " %3.2f `r(ub)' ")"
+  local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
 
   // Get the p-value.
   if r(p) < ${p_threshold} local p "<${p_threshold}"
