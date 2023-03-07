@@ -34,7 +34,7 @@ rename HTAYorN `hta'
 encode `hta', generate(hta)
 
 // Define treatment variables.
-// TODO: Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
+// Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
 local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
 local RecommendedvsNone     rec_vs_none   // New variable name.
 local RecommendedvsNonrecom rec_vs_nonrec // New variable name.
