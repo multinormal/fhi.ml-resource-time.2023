@@ -14,7 +14,7 @@ destring `year', generate(year)
 tempvar field
 rename AreaHealthorWelfare `field'
 replace `field' = "Healthcare" if `field' == "H"
-replace `field' = "Welface"    if `field' == "W"
+replace `field' = "Welfare"    if `field' == "W"
 encode `field' , generate(field)
 
 // Rename and encode the variable that codes for the type of product.
