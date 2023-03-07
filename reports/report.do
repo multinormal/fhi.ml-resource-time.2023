@@ -31,20 +31,28 @@ putdocx textblock end
 putdocx text ("Methods")
 
 `newpara'
-Analyses were performed as specified in the protocol using Stata 16 (StataCorp LLC, College 
+Except as noted below, we analyzed the data as specified in the protocol using Stata 16 (StataCorp LLC, College 
 Station, Texas, USA). Briefly, we analyzed resource use (person-hours) on the log scale 
 using extended interval regression (eintreg) and used a likelihood-adjusted-censoring 
-inverse-probability-weighted regression adjustment (LAC-IPWRA; stteffects) model to estimate mean 
-difference in time-to-completion. Ongoing reviews were right censored at the end of data collection 
-(31 January 2023). All analyses accounted for right-censored outcomes and 
-for nonrandom endogenous treatment allocation, which was modelled in terms of review field (welfare 
-or healthcare) and whether any evidence synthesis (quantitative or qualitative) was planned. We had 
-no reason to suspect informative (nonrandom) censoring, so did not model a censoring mechanism. We 
-re-expressed the estimates as ratios (relative resource use and relative time-to-completion) to aid 
-generalization to other institutions. We present two-sided 95% confidence intervals and p-values 
-where appropriate and use a prespecified p < 0.05 significance criterion throughout. We also 
-present the time-to-completion data using Kaplan-Meier estimates of survivor functions.
+inverse-probability-weighted regression adjustment model (LAC-IPWRA; stteffects) to estimate mean 
+differences in time-to-completion. Ongoing reviews were right censored at the end of data collection 
+(31 January 2023) and all analyses accounted for this censoring. We had no reason to suspect informative 
+(nonrandom) censoring, so did not model a censoring mechanism. Because we did not 
+randomize reviews to use recommended ML versus no ML (for example), we modelled ML use as an endogenously 
+assigned treatment predicted by field (healthcare or welfare) and pre-specification (existence 
+of a protocol), as planned, in all analyses except that for the secondary analysis recommended versus 
+non-recommended ML use with respect to resource use. While there was some statistically significant evidence 
+of endogeneity from the corresponding time-to-completion analysis and an exploratory logistic regression, the estimate of 
+relative resource use obtained using the planned model appeared to dramatically overestimate the 
+effect of recommended ML use. We therefore used a model for this analysis that did not account for 
+possible endogeneity. We re-expressed all estimates as ratios (relative resource use and relative 
+time-to-completion) to aid generalization to other institutions. We present two-sided 95% confidence 
+intervals and p-values where appropriate and use a prespecified p < 0.05 significance criterion 
+throughout. We also present the time-to-completion data using Kaplan-Meier estimates of survivor functions.
 putdocx textblock end
+
+// Start a new page.
+putdocx pagebreak
 
 // Results section
 `heading'
@@ -52,6 +60,9 @@ putdocx text ("Results")
 
 // Insert the table of results.
 results_table
+
+// Start a new page.
+putdocx pagebreak
 
 // Insert the Kaplan-Meier plots.
 foreach comparison of global comparisons {
