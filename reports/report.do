@@ -31,22 +31,27 @@ putdocx textblock end
 putdocx text ("Methods")
 
 `newpara'
-Except as noted, all statistical analyses were performed as specified in our protocol 
-using Stata 16 (StataCorp LLC, College Station, Texas, USA). Briefly, we analyzed 
-resource use (person-hours) on the log scale using extended interval regression (eintreg) 
-and used a likelihood-adjusted-censoring inverse-probability-weighted regression 
-adjustment model (LAC-IPWRA; stteffects) to estimate mean differences in time-to-completion. 
-Ongoing reviews were right censored at the end of data collection (31 January 2023) and 
-all analyses accounted for this censoring. We had no reason to suspect informative 
-(nonrandom) censoring, so did not model a censoring mechanism. Because we did not 
-randomize reviews to use recommended ML versus no ML (for example), we modelled ML use 
-as an endogenously assigned treatment predicted by field (healthcare or welfare) and 
-pre-specification (existence of a protocol), as planned, in all but one analysis (see 
-Protocol Deviations). We re-expressed all estimates as ratios (relative resource use and 
-relative time-to-completion) to aid generalization to other institutions. We present 
-two-sided 95% confidence intervals and p-values where appropriate and use a 
-prespecified p < 0.05 significance criterion throughout. We also present the 
-time-to-completion data using Kaplan-Meier estimates of survivor functions.
+All statistical analyses were performed as specified in our 
+protocol using Stata 16 (StataCorp LLC, College Station, Texas, USA), 
+except for one secondary analysis (see Protocol Deviations). The study is 
+retrospective, and reviews were not randomized to use recommended ML versus 
+no ML (for example). We therefore modelled ML use as an endogenously assigned 
+treatment predicted by field (healthcare or welfare) and pre-specification 
+(existence of a protocol), as planned. Resource use was analyzed using 
+extended interval regression (Stata's eintreg command) and time-to-completion 
+was analyzed using a likelihood-adjusted-censoring inverse-probability-weighted 
+regression adjustment model (LAC-IPWRA; Stata's stteffects command). Ongoing 
+reviews were right censored at the end of data collection (31 January 2023) 
+and all analyses accounted for this censoring. We had no reason to suspect 
+informative (nonrandom) censoring, so did not model a censoring mechanism. 
+We re-expressed all estimates as ratios (relative resource use and relative 
+time-to-completion) to aid generalization to other institutions. We did this 
+by exponentiating differences in log resource use, and by computing ratios of 
+mean times-to-completion using the delta method. We present two-sided 
+95% confidence intervals and p-values where appropriate and use a 
+prespecified p < 0.05 significance criterion throughout. We also 
+present the time-to-completion data using Kaplan-Meier estimates of survivor 
+functions.
 putdocx textblock end
 
 `heading'
@@ -55,7 +60,7 @@ putdocx text ("Protocol Deviations")
 `newpara'
 We had planned to model ML use as an endogenously assigned treatment in all analyses. However, 
 we chose to deviate from protocol for the secondary analysis of recommended versus 
-non-recommended ML use for the outcome of resource use. While there was some statistically 
+non-recommended ML use for the resource use outcome. While there was statistically 
 significant evidence of endogeneity from the corresponding time-to-completion analysis and 
 an exploratory logistic regression, the estimate of relative resource use obtained using the 
 planned model appeared to dramatically overestimate the effect of recommended ML use. We 
