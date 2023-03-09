@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res} 8 Mar 2023, 09:57:28
+ {txt}opened on:  {res} 9 Mar 2023, 10:31:36
 {txt}
 {com}. 
 . // Set up globals.
@@ -867,10 +867,12 @@ meta_analysis_planned {c |}
 . // Insert the table of results.
 . results_table
 {res}{txt}1 2
+  {res}21
 
-    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
+  12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
@@ -885,10 +887,12 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.10{col 26}{space 2}     0.03{col 37}{space 1}   -8.25{col 46}{space 3} 0.00{col 54}{space 4}     0.06{col 67}{space 3}     0.17
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}1 2
+  {res}21
 
-    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
+  6
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
@@ -903,10 +907,12 @@ log_resour~1 {c |}{res}          5    6.789035    .8300506   5.828946   7.728416
 {space 9}(1) {c |}{col 14}{res}{space 2}     1.49{col 26}{space 2}     0.49{col 37}{space 1}    1.22{col 46}{space 3} 0.22{col 54}{space 4}     0.78{col 67}{space 3}     2.85
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}1 2
+  {res}27
 
-    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
+  12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
@@ -921,10 +927,12 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.08{col 26}{space 2}     0.04{col 37}{space 1}   -5.71{col 46}{space 3} 0.00{col 54}{space 4}     0.04{col 67}{space 3}     0.20
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}1 2
+  {res}21
 
-    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         19    27.43609    15.02005   7.142857         60
+  12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
@@ -947,10 +955,12 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {space 9}(1) {c |}{col 14}{res}{space 2}     1.10{col 26}{space 2}     0.27{col 37}{space 1}    0.41{col 46}{space 3} 0.68{col 54}{space 4}     0.69{col 67}{space 3}     1.78
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}1 2
+  {res}21
 
-    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         19    27.43609    15.02005   7.142857         60
+  6
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
@@ -973,10 +983,12 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.89{col 26}{space 2}     0.21{col 37}{space 1}   -0.50{col 46}{space 3} 0.62{col 54}{space 4}     0.55{col 67}{space 3}     1.42
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}1 2
+  {res}27
 
-    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         24    29.26786    17.64006   7.142857   81.42857
+  12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
