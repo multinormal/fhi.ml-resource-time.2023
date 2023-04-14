@@ -1,5 +1,7 @@
 version 16.1
 
+// TODO: Look at the estimates carefully to make sure that directions of effects are computed correctly.
+
 // Specify the time use models.
 foreach comparison of global comparisons {
   global `comparison'_time_model     stteffects ipwra (${adj_var}) (`comparison' ${endo_vars}) , aequations
