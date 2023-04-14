@@ -58,15 +58,15 @@ label define planned 0 No 1 Yes
 
 // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
 // quantitative and qualitative), and NMA.
-local planned ProtocolavailableYorN SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
+local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
 local ProtocolavailableYorN        prespecified          // New variable name.
 local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
 local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
 local SynthesisplannedNMAYorN      nma_planned           // New variable name.
-local prespecified_label          "Was the work pre-specified?"
 local synthesis_planned_label     "Was any synthesis planned?"
 local meta_analysis_planned_label "Was meta-analysis planned?"
 local nma_planned_label           "Was NMA planned?"
+
 foreach p of local planned {
   generate       ``p'' = 0
   replace        ``p'' = 1 if `p' != "N" // Works for one value coded "Both".
@@ -74,6 +74,13 @@ foreach p of local planned {
   label variable ``p'' "```p''_label'"
   drop `p'
 }
+
+// Define the prespecified variable (whether a protocol was published).
+generate prespecified = 0
+replace  prespecified = 1 if regexm(ProtocolLink, "http.*")
+label values   prespecified planned
+label variable prespecified "Was the work pre-specified?"
+drop ProtocolLink
 
 // Define a completed variable (analogous to a failure indicator in survival analysis).
 generate          completed = 1
