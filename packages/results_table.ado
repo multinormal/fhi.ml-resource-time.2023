@@ -111,7 +111,7 @@ program time_row
   // We do this on the log scale and then exponentiate, which allows us to get a p-value that tests the null that
   // the log ratio is zero (equivalent to the ratio being one).
   estimate restore `comparison'_time
-  nlcom log(_b[ATE:r2vs1.`comparison'] + _b[POmean:1.`comparison']) - log(_b[POmean:1.`comparison']), post
+  nlcom log(_b[ATE:r1vs0.`comparison'] + _b[POmean:0.`comparison']) - log(_b[POmean:0.`comparison']), post
   lincom _nl_1 , eform
   local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
 

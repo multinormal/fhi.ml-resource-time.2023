@@ -34,20 +34,38 @@ rename HTAYorN `hta'
 encode `hta', generate(hta)
 
 // Define treatment variables.
-// Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
-local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
-local RecommendedvsNone     rec_vs_none   // New variable name.
-local RecommendedvsNonrecom rec_vs_nonrec // New variable name.
-local AnyvsNone             any_vs_none   // New variable name.
-local Recomvsunderuse       rec_vs_under  // New variable name.
-local Recomvsoveruse        rec_vs_over   // New variable name.
-foreach t of local treatments {
-  replace `t' = "" if !regexm(`t', "[A-Z]") // Non-missing values are letters in [A-Z]
-  encode  `t', generate(``t'')
-  drop `t'
-}
+// Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recommended ML.
+generate          rec_vs_none = .
+replace           rec_vs_none = 0 if RecommendedvsNone == "H"
+replace           rec_vs_none = 1 if RecommendedvsNone == "G"
+label    define   rec_vs_none 0 "H" 1 "G"
+label    values   rec_vs_none rec_vs_none
 
-// Define the variable labels for the comaprisons.
+generate          rec_vs_nonrec = .
+replace           rec_vs_nonrec = 0 if RecommendedvsNonrecom == "J"
+replace           rec_vs_nonrec = 1 if RecommendedvsNonrecom == "K"
+label    define   rec_vs_nonrec 0 "J" 1 "K"
+label    values   rec_vs_nonrec rec_vs_nonrec
+
+generate          any_vs_none = .
+replace           any_vs_none = 0 if AnyvsNone == "Q"
+replace           any_vs_none = 1 if AnyvsNone == "R"
+label    define   any_vs_none 0 "Q" 1 "R"
+label    values   any_vs_none any_vs_none
+
+generate          rec_vs_under = .
+replace           rec_vs_under = 0 if Recomvsunderuse == "T"
+replace           rec_vs_under = 1 if Recomvsunderuse == "U"
+label    define   rec_vs_under 0 "T" 1 "U"
+label    values   rec_vs_under rec_vs_under
+
+generate          rec_vs_over = .
+replace           rec_vs_over = 0 if Recomvsoveruse == "D"
+replace           rec_vs_over = 1 if Recomvsoveruse == "E"
+label    define   rec_vs_over 0 "D" 1 "E"
+label    values   rec_vs_over rec_vs_over
+
+// Define the variable labels for the comparisons.
 label variable rec_vs_none   "Recommended vs No ML Use"
 label variable rec_vs_nonrec "Recommended vs Non-recommended ML Use"
 label variable any_vs_none   "Any vs No ML Use"
