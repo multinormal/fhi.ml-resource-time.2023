@@ -116,8 +116,8 @@ destring `resource', replace force // One missing outcome. TODO: Note this in th
 generate log_resource1 = log(`resource')
 generate log_resource2 = log(`resource')
 replace  log_resource2 = . if !completed // For right-censored data.
-label variable log_resource1 "Resource use (log person-hours)"
-label variable log_resource2 "Resource use (log person-hours); possibly censored"
+label variable log_resource1 "Lower-bound on resource use (log person-hours)"
+label variable log_resource2 "Upper-bound on resource use (log person-hours); possibly censored"
 
 // Define commission date variable.
 tempvar c_day c_month c_year commission
@@ -126,6 +126,7 @@ rename CommissionMonth112 `c_month'
 rename CommissionYear2020 `c_year'
 generate `commission' = `c_day' + "/" + `c_month' + "/" + `c_year'
 generate commission = date(`commission', "DMY")
+label variable commission "Commission date"
 
 // Define completion date variable.
 tempvar c_day c_month c_year completion
@@ -136,6 +137,7 @@ generate `completion' = `c_day' + "/" + `c_month' + "/" + `c_year'
 generate completion = date(`completion', "DMY")
 // Set right-censoring date for ongoing reviews.
 replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
+label variable completion "Completion date (possibly censored)"
 
 // We do not have data on number of downloads or commissioner satisfaction.
 drop Commissionersatisfactionoveral Numberofdownloadstodate
