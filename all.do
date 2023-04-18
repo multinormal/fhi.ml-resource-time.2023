@@ -12,8 +12,13 @@ do globals/models
 // Set up Stata.
 do setup/setup
 
-// Import and process the data.
+// Import, process the data.
 do data/data
+
+// Clear the data and then use the processed data.
+clear
+use ${exported_data_file}
+stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
 // Do estimation.
 do estimation/estimate

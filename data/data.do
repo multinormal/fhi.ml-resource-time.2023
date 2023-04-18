@@ -119,7 +119,7 @@ replace  log_resource2 = . if !completed // For right-censored data.
 label variable log_resource1 "Resource use (log person-hours)"
 label variable log_resource2 "Resource use (log person-hours); possibly censored"
 
-// Define commision date variable.
+// Define commission date variable.
 tempvar c_day c_month c_year commission
 rename CommissionDay131   `c_day'
 rename CommissionMonth112 `c_month'
@@ -137,14 +137,15 @@ generate completion = date(`completion', "DMY")
 // Set right-censoring date for ongoing reviews.
 replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
 
-// stset the data.
-stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
-
-// We do not have data on number of downloads or comissioner satisfaction.
+// We do not have data on number of downloads or commissioner satisfaction.
 drop Commissionersatisfactionoveral Numberofdownloadstodate
 
 // Ensure that there are no NMAs in the sample.
 levelsof nma_planned
 assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
 
-// TODO: Drop other variables with uppercase first letters?
+// Keep just the variables necessary for analysis.
+local to_keep completion completed commission ${resource_outcome} *_vs_* prespecified ${adj_var} ${endo_vars}
+local to_keep = subinstr("`to_keep'", "i.", "", .)
+keep `to_keep'
+save ${exported_data_file}, replace

@@ -5,6 +5,8 @@ global sheet_name "Data Extraction Form"
 global cellrange  A1:BE40
 global signature "39:57(80915):1037905700:239166213"
 
+global exported_data_file "products/resource-time.dta"
+
 global random_seed 1234
 
 global p_threshold 0.0001
