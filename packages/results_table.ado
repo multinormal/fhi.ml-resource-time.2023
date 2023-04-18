@@ -21,10 +21,12 @@ program results_table
   }
 
   // Make the table of main results.
-  local note        ¹Data are means of samples restricted to completed (uncensored) reviews. ²Estimates are relative
-  local note `note' resource use and relative time-to-completion, account for right-censored outcomes
-  local note `note' and, except for the recommended versus non-recommended ML use comparison for the
-  local note `note' outcome resource use, also account for nonrandom endogenous treatment allocation.
+  local note        ¹Data are means of samples restricted to completed (uncensored) reviews and
+  local note `note' do not account for nonrandom endogenous treatment allocation.
+  local note `note' ²Estimates are relative resource use and relative time-to-completion, and account 
+  local note `note' for right-censored outcomes and nonrandom endogenous treatment allocation.
+  local note `note' An effect estimate < 1 indicates that recommended or any ML use is associated with
+  local note `note' less resource use or shorter time-to-completion.
   local note `note' All estimates are adjusted for planned meta-analysis.
   frame `frame' {
     putdocx table results = data(*), varnames note("`note'") border(all, nil) layout(autofitcontents)
