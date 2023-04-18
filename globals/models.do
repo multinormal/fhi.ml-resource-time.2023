@@ -1,8 +1,5 @@
 version 16.1
 
-// TODO: Look at the estimates carefully to make sure that directions of effects are computed correctly.
-// TODO: Remember that the KM plots may be misleading given the possible endogeneous treatment assignment.
-
 // Specify the time use models.
 foreach comparison of global comparisons {
   global `comparison'_time_model     stteffects ipwra (${adj_var}) (`comparison' ${endo_vars}) , aequations
