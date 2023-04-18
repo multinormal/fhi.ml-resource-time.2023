@@ -31,13 +31,12 @@ putdocx textblock end
 putdocx text ("Methods")
 
 `newpara'
-All statistical analyses were performed as specified in our 
-protocol using Stata 16 (StataCorp LLC, College Station, Texas, USA), 
-except for one secondary analysis (see Protocol Deviations). The study is 
-retrospective, and reviews were not randomized to use recommended ML versus 
+Except as noted in Protocol Deviations, the statistical analyses were performed 
+as specified in our protocol using Stata 16 (StataCorp LLC, College Station, Texas, USA). 
+The study is retrospective, and reviews were not randomized to use recommended ML versus 
 no ML (for example). We therefore modelled ML use as an endogenously assigned 
-treatment predicted by field (healthcare or welfare) and pre-specification 
-(existence of a protocol), as planned. Resource use was analyzed using 
+treatment predicted by field (healthcare or welfare) and prespecification 
+(existence of a protocol). Resource use was analyzed using 
 extended interval regression (Stata's eintreg command) and time-to-completion 
 was analyzed using a likelihood-adjusted-censoring inverse-probability-weighted 
 regression adjustment model (LAC-IPWRA; Stata's stteffects command). Ongoing 
@@ -51,20 +50,23 @@ mean times-to-completion using the delta method. We present two-sided
 95% confidence intervals and p-values where appropriate and use a 
 prespecified p < 0.05 significance criterion throughout. We also 
 present the time-to-completion data using Kaplan-Meier estimates of survivor 
-functions.
+functions (but note that these do not account for nonrandom endogenous treatment 
+assignment).
 putdocx textblock end
 
 `heading'
 putdocx text ("Protocol Deviations")
 
 `newpara'
-We had planned to model ML use as an endogenously assigned treatment in all analyses. However, 
-we chose to deviate from protocol for the secondary analysis of recommended versus 
-non-recommended ML use for the resource use outcome. While there was statistically 
-significant evidence of endogeneity from the corresponding time-to-completion analysis and 
-an exploratory logistic regression, the estimate of relative resource use obtained using the 
-planned model appeared to dramatically overestimate the effect of recommended ML use. We 
-therefore used a model for this analysis that did not account for possible endogeneity.
+It was not possible to model nonrandom endogenous treatment assignment using 
+both prespecified variables (field and prespecification) in the analyses of 
+resource use. We therefore used one of the two variables, choosing the variable 
+with smallest standard error. Endogeneous assignment of any or recommended ML 
+was modelled by field (welfare reviews were generally more likely to use ML) and 
+recommended ML use was modelled by prespecification (reviews with protocols were 
+generally less likely to use recommended ML). While, the evidence for endogeneity 
+was weak (e.g., p=0.06), we chose to account for the possiblity and follow our protocol 
+where possible.
 putdocx textblock end
 
 `newpara'
