@@ -112,7 +112,7 @@ drop OngoingYorN
 // Define the resource use variable.
 tempvar resource
 rename ResourceUsePersonHours `resource'
-destring `resource', replace force // One missing outcome. TODO: Note this in the report.
+destring `resource', replace force // One missing outcome.
 generate log_resource1 = log(`resource')
 generate log_resource2 = log(`resource')
 replace  log_resource2 = . if !completed // For right-censored data.
