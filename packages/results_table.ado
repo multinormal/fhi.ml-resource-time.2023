@@ -74,7 +74,7 @@ program resource_row
 
   // Get the effect estimate, relative resource use via exponentiation.
   estimate restore `comparison'_resource
-  local contrast : word 2 of `levels' // TODO: After unblinding, replace this with known base levels via fvset or similar.
+  local contrast 1 // The comparisons are indicators, where 1 indicates our preferred ML use.
   lincom `contrast'.`comparison' , eform
   local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
 
