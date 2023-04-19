@@ -95,7 +95,25 @@ we chose to account for possible endogeneity according to our protocol.
 putdocx textblock end
 
 `newpara' // TODO: This text is not automatically generated.
-TODO: Explain each estimate, especially the directions.
+Accounting for endogeneity and censoring, the adjusted point estimate for relative 
+resource use suggests that reviews that use ML as recommended use 3.7 times as much resource 
+as reviews that do not use ML, however this estimate is very imprecise 
+(95% CI 0.4 to 37.9; p=0.269). We estimate that reviews that use any 
+ML use 0.7 times as much resource as reviews that do not use ML, but this estimate is also 
+uncertain (95% CI 0.2 to 1.9; p=0.439). We estimate that 
+reviews that use ML as recommended use 0.5 times as much resource as reviews that use non-recommended 
+ML, but again that estimate is very uncertain (95% CI 0.0 to 10.7; p=0.658).
+putdocx textblock end
+
+`newpara' // TODO: This text is not automatically generated.
+Accounting for endogeneity and censoring, the adjusted estimate for time-to-completion 
+suggests that that reviews that use ML as recommended are completed in 90% of the time 
+of reviews that do not use ML, however this estimate is uncertain 
+(95% CI 0.5 to 1.6; p=0.753). We estimate that reviews that use any 
+ML are also completed in 90% of the time of reviews that do not use ML, but this estimate 
+is also uncertain (95% CI 0.6 to 1.5; p=0.784). We estimate that 
+reviews that use ML as recommended take 10% longer to complete than reviews that use non-recommended 
+ML, but again that estimate is uncertain (95% CI 0.7 to 1.9; p=0.658).
 putdocx textblock end
 
 // Start a new page.
