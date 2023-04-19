@@ -26,7 +26,7 @@ program results_table
   local note `note' ²Estimates are relative resource use and relative time-to-completion, and account 
   local note `note' for right-censored outcomes and nonrandom endogenous treatment allocation.
   local note `note' An effect estimate < 1 indicates that recommended or any ML use is associated with
-  local note `note' less resource use or shorter time-to-completion.
+  local note `note' less resource use or shorter time-to-completion than to the comparator.
   local note `note' All estimates are adjusted for planned meta-analysis.
   frame `frame' {
     putdocx table results = data(*), varnames note("`note'") border(all, nil) layout(autofitcontents)
