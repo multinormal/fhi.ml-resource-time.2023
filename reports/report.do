@@ -61,12 +61,11 @@ putdocx text ("Protocol Deviations")
 It was not possible to model nonrandom endogenous treatment assignment using 
 both prespecified variables (field and prespecification) in the analyses of 
 resource use. We therefore used one of the two variables, choosing the variable 
-with smallest standard error. Endogeneous assignment of any or recommended ML 
-was modelled by field (welfare reviews were generally more likely to use ML) and 
-recommended ML use was modelled by prespecification (reviews with protocols were 
-generally less likely to use recommended ML). While, the evidence for endogeneity 
-was weak (e.g., p=0.06), we chose to account for the possiblity and follow our protocol 
-where possible.
+with the smallest standard error in the model of treatment assignment. 
+Endogeneous assignment of any or recommended ML was modelled by field 
+(welfare reviews were generally more likely to use ML) and recommended ML 
+use was modelled by prespecification (reviews with protocols were generally 
+less likely to use recommended ML).
 putdocx textblock end
 
 `newpara'
@@ -86,6 +85,18 @@ putdocx text ("Results")
 
 // Insert the table of results.
 results_table
+
+`newpara' // TODO: This text is not automatically generated.
+The strength of evidence for endogeneity varied by comparison. For example, 
+the correlation between use of any versus no ML and resource use was 0.95 
+(95% CI 0.25 to 1.00; p<0.0001) while that for use of recommended versus 
+no ML use was 0.01 (95% CI -0.97 to 0.97; p=0.99). However, as far as possible, 
+we chose to account for possible endogeneity according to our protocol.
+putdocx textblock end
+
+`newpara' // TODO: This text is not automatically generated.
+TODO: Explain each estimate, especially the directions.
+putdocx textblock end
 
 // Start a new page.
 putdocx pagebreak
