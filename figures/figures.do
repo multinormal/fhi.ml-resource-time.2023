@@ -33,11 +33,14 @@ foreach comparison of global comparisons {
   sts graph , failure by(`comparison') `opts' `risktable' `legend' title("")
   
   // Save the figure in the required formats.
-  foreach format in png pdf { // TODO: Add TIFF with compression via sips.
+  foreach format in png pdf tif {
     local width ""
     if "`format'" == "png" local width width(3000)
     local filename "products/Time-to-completion for `comparison_name'.`format'"
     graph export "`filename'" , `width' replace
+    if "`format'" == "tif" {
+      !sips -s formatOptions lzw "`filename'" // Use sips to LZW-compress the file.
+    }
   }
 }
 
