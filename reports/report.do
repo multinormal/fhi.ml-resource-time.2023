@@ -104,12 +104,14 @@ non-recommended and no ML use, while no ML use is favored over recommended ML us
 For time-to-completion, point estimates favor recommended and any ML use over 
 no ML use, while non-recommended ML use is favored over recommended ML use. The 
 estimates are generally but not always consistent with the sample means and 
-Kaplan-Meier plots. Note that the sample means may be quite misleading due to 
+Kaplan-Meier plots. However, the sample means may be quite misleading due to 
 possible confounding (nonrandom endogenous treatment assignment), do not account 
 for censoring, and are not adjusted for the effect of planned meta-analysis, which 
 is associated with more resource use and longer time-to-completion. The Kaplan-Meier 
 plots show censored reviews, but do not account for endogeneity and are not adjusted 
-for planned meta-analysis.
+for planned meta-analysis. Recall that we estimated ratios of means, while Kaplan-Meier 
+plots are generally interpreted in terms of quantiles (e.g., median 
+time-to-completion).
 putdocx textblock end
 
 // Start a new page.
