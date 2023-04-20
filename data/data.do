@@ -9,6 +9,7 @@ if fileexists("${exported_data_file}") {
 
 // Load the data and check its signature is as expected.
 import excel "${data_file}", sheet("${sheet_name}") cellrange(${cellrange}) firstrow allstring
+frame copy default orig // TODO: REMOVE THIS
 datasignature
 assert r(datasignature) == "${signature}"
 
@@ -78,17 +79,38 @@ label variable any_vs_none   "Any vs No ML Use"
 label define no_yes_label 0 No 1 Yes
 
 // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
-// quantitative and qualitative), and NMA.
-local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
-local ProtocolavailableYorN        prespecified          // New variable name.
-local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
-local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
-local SynthesisplannedNMAYorN      nma_planned           // New variable name.
-local synthesis_planned_label     "Was any synthesis planned?"
-local meta_analysis_planned_label "Was meta-analysis planned?"
-local nma_planned_label           "Was NMA planned?"
+// quantitative and qualitative), NMA, etc.
+local vars        SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
+local vars `vars' Rankingalgorithmduringstudyi Classifiersduringstudyidenti Classifiersduringdataextracti
+local vars `vars' Clusteringduringstudyidentifi Clusteringduringdataextractio OpenAlexduringstudyidentifica
+local vars `vars' RoBassessmentYorN AutomateddataextractionYor OtherMLYorN
+local ProtocolavailableYorN           prespecified              // New variable name.
+local SynthesisplannednoneYorN        synthesis_planned         // New variable name.
+local SynthesisplannedMetaAnalysis    meta_analysis_planned     // New variable name.
+local SynthesisplannedNMAYorN         nma_planned               // New variable name.
+local Rankingalgorithmduringstudyi    ranking_identification    // New variable name.
+local Classifiersduringstudyidenti    classifier_identification // New variable name.
+local Classifiersduringdataextracti   classifier_extraction     // New variable name.
+local Clusteringduringstudyidentifi   clustering_identification // New variable name.
+local Clusteringduringdataextractio   clustering_extraction     // New variable name.
+local OpenAlexduringstudyidentifica   openalex_identification   // New variable name.
+local RoBassessmentYorN               rob_assessment            // New variable name.
+local AutomateddataextractionYor      automated_extraction      // New variable name.
+local OtherMLYorN                     other_ml                  // New variable name.
+local synthesis_planned_label         "Was any synthesis planned?"
+local meta_analysis_planned_label     "Was meta-analysis planned?"
+local nma_planned_label               "Was NMA planned?"
+local ranking_identification_label    "Ranking algorithm during study identification"
+local classifier_identification_label "Classifiers during study identification"
+local classifier_extraction_label     "Classifiers during data extraction"
+local clustering_identification_label "Clustering during study identification"
+local clustering_extraction_label     "Clustering during data extraction"
+local openalex_identification_label   "OpenAlex during study identification"
+local rob_assessment_label            "ML for RoB assessment"
+local automated_extraction            "Automated data extraction"
+local other_ml_label                  "Other ML"
 
-foreach p of local planned {
+foreach p of local vars {
   generate       ``p'' = 0
   replace        ``p'' = 1 if `p' != "N" // Works for one value coded "Both".
   label values   ``p'' no_yes_label
@@ -156,7 +178,7 @@ assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
 
 // Keep just the variables necessary for analysis.
 local to_keep completion completed commission ${resource_outcome} *_vs_* prespecified ${adj_var} ${endo_vars}
-local to_keep `to_keep' hta nma_planned synthesis_planned
+local to_keep `to_keep' hta nma_planned synthesis_planned *_identification *_extraction rob_assessment other_ml
 local to_keep = subinstr("`to_keep'", "i.", "", .)
 keep `to_keep'
 save ${exported_data_file}, replace

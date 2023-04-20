@@ -85,6 +85,9 @@ putdocx pagebreak
 `heading'
 putdocx text ("Results")
 
+// Insert the table of sample characteristics.
+sample_characteristics
+
 // Insert the table of results.
 results_table
 
