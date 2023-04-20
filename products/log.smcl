@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}14 Apr 2023, 17:40:10
+ {txt}opened on:  {res}20 Apr 2023, 12:02:21
 {txt}
 {com}. 
 . // Set up globals.
@@ -19,6 +19,9 @@
 {com}. global cellrange  A1:BE40
 {txt}
 {com}. global signature "39:57(80915):1037905700:239166213"
+{txt}
+{com}. 
+. global exported_data_file "products/resource-time.dta"
 {txt}
 {com}. 
 . global random_seed 1234
@@ -58,16 +61,14 @@
 {com}. version 16.1
 {txt}
 {com}. 
-. // TODO: Look at the estimates carefully to make sure that directions of effects are computed correctly.
-. 
 . // Specify the time use models.
 . foreach comparison of global comparisons {c -(}
 {txt}  2{com}.   global `comparison'_time_model     stteffects ipwra (${c -(}adj_var{c )-}) (`comparison' ${c -(}endo_vars{c )-}) , aequations
 {txt}  3{com}. {c )-}
 {txt}
 {com}. 
-. // Specify the resource use models. // TODO: Document deviations from protocol.
-. // TODO: We cannot use both variables to predict treatment in these analyses, and using the wrong one leads to nonsensical results (very large SEs on the treatment predictions).
+. // Specify the resource use models.
+. // We cannot use both variables to predict treatment in these analyses, and using the wrong one leads to nonsensical results (very large SEs on the treatment predictions).
 . global rec_vs_none_resource_model   eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(rec_vs_none   = i.field ,        nointeract)
 {txt}
 {com}. global rec_vs_nonrec_resource_model eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(rec_vs_nonrec = i.prespecified , nointeract)
@@ -75,9 +76,6 @@
 {com}. global any_vs_none_resource_model   eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(any_vs_none   = i.field ,        nointeract)
 {txt}
 {com}. 
-. // TODO: In paper, report that it is interesting that field predicts recommended vs none, and any vs none, but prespecified predicts rec vs nonrec.
-. // TODO: i.e., does prespecication lead to use of recommended ML? We will know after unblinding.
-. 
 {txt}end of do-file
 
 {com}. 
@@ -116,7 +114,7 @@
 {txt}end of do-file
 
 {com}. 
-. // Import and process the data.
+. // Import, process the data.
 . do data/data
 {txt}
 {com}. version 16.1
@@ -333,7 +331,7 @@
 {txt}
 {com}. rename ResourceUsePersonHours `resource'
 {res}{txt}
-{com}. destring `resource', replace force // One missing outcome. TODO: Note this in the report.
+{com}. destring `resource', replace force // One missing outcome.
 {txt}__000005: contains nonnumeric characters; {res}replaced {txt}as {res}int
 {txt}(1 missing value generated)
 {res}{txt}
@@ -346,12 +344,12 @@
 {com}. replace  log_resource2 = . if !completed // For right-censored data.
 {txt}(3 real changes made, 3 to missing)
 
-{com}. label variable log_resource1 "Resource use (log person-hours)"
+{com}. label variable log_resource1 "Lower-bound on resource use (log person-hours)"
 {txt}
-{com}. label variable log_resource2 "Resource use (log person-hours); possibly censored"
+{com}. label variable log_resource2 "Upper-bound on resource use (log person-hours); possibly censored"
 {txt}
 {com}. 
-. // Define commision date variable.
+. // Define commission date variable.
 . tempvar c_day c_month c_year commission
 {txt}
 {com}. rename CommissionDay131   `c_day'
@@ -363,6 +361,8 @@
 {com}. generate `commission' = `c_day' + "/" + `c_month' + "/" + `c_year'
 {txt}
 {com}. generate commission = date(`commission', "DMY")
+{txt}
+{com}. label variable commission "Commission date"
 {txt}
 {com}. 
 . // Define completion date variable.
@@ -383,9 +383,40 @@
 . replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
 {txt}(3 real changes made)
 
+{com}. label variable completion "Completion date (possibly censored)"
+{txt}
 {com}. 
-. // stset the data.
-. stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
+. // We do not have data on number of downloads or commissioner satisfaction.
+. drop Commissionersatisfactionoveral Numberofdownloadstodate
+{txt}
+{com}. 
+. // Ensure that there are no NMAs in the sample.
+. levelsof nma_planned
+{res}{txt}0
+
+{com}. assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
+{txt}
+{com}. 
+. // Keep just the variables necessary for analysis.
+. local to_keep completion completed commission ${c -(}resource_outcome{c )-} *_vs_* prespecified ${c -(}adj_var{c )-} ${c -(}endo_vars{c )-}
+{txt}
+{com}. local to_keep = subinstr("`to_keep'", "i.", "", .)
+{txt}
+{com}. keep `to_keep'
+{txt}
+{com}. save ${c -(}exported_data_file{c )-}, replace
+{txt}file products/resource-time.dta saved
+
+{com}. 
+{txt}end of do-file
+
+{com}. 
+. // Clear the data and then use the processed data.
+. clear
+{txt}
+{com}. use ${c -(}exported_data_file{c )-}
+{txt}
+{com}. stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
      {txt}failure event:  {res}completed != 0 & completed < .
 {txt}obs. time interval:  {res}(origin, completion]
@@ -404,22 +435,6 @@
                                      {txt}earliest observed entry t = {res}        0
                                           {txt}last observed exit t = {res} 102.1429
 {txt}
-{com}. 
-. // We do not have data on number of downloads or comissioner satisfaction.
-. drop Commissionersatisfactionoveral Numberofdownloadstodate
-{txt}
-{com}. 
-. // Ensure that there are no NMAs in the sample.
-. levelsof nma_planned
-{res}{txt}0
-
-{com}. assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
-{txt}
-{com}. 
-. // TODO: Drop other variables with uppercase first letters?
-. 
-{txt}end of do-file
-
 {com}. 
 . // Do estimation.
 . do estimation/estimate
@@ -812,13 +827,16 @@ meta_analysis_planned {c |}
 .   sts graph , failure by(`comparison') `opts' `risktable' `legend' title("")
 {txt} 15{com}.   
 .   // Save the figure in the required formats.
-.   foreach format in png pdf {c -(} // TODO: Add TIFF with compression via sips.
+.   foreach format in png pdf tif {c -(}
 {txt} 16{com}.     local width ""
 {txt} 17{com}.     if "`format'" == "png" local width width(3000)
 {txt} 18{com}.     local filename "products/Time-to-completion for `comparison_name'.`format'"
 {txt} 19{com}.     graph export "`filename'" , `width' replace
-{txt} 20{com}.   {c )-}
-{txt} 21{com}. {c )-}
+{txt} 20{com}.     if "`format'" == "tif" {c -(}
+{txt} 21{com}.       !sips -s formatOptions lzw "`filename'" // Use sips to LZW-compress the file.
+{txt} 22{com}.     {c )-}
+{txt} 23{com}.   {c )-}
+{txt} 24{com}. {c )-}
 {res}{txt}0 1
 
          failure _d:  {res}completed
@@ -826,6 +844,10 @@ meta_analysis_planned {c |}
              {txt}origin:  {res}time commission
 {txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.png written in PNG format)
 (file products/Time-to-completion for Recommended vs No ML Use.pdf written in PDF format)
+(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif written in TIFF format)
+
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif
+  /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif
 {res}{txt}0 1
 
          failure _d:  {res}completed
@@ -833,6 +855,10 @@ meta_analysis_planned {c |}
              {txt}origin:  {res}time commission
 {txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.png written in PNG format)
 (file products/Time-to-completion for Recommended vs Non-recommended ML Use.pdf written in PDF format)
+(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif written in TIFF format)
+
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif
+  /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif
 {res}{txt}0 1
 
          failure _d:  {res}completed
@@ -840,6 +866,10 @@ meta_analysis_planned {c |}
              {txt}origin:  {res}time commission
 {txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.png written in PNG format)
 (file products/Time-to-completion for Any vs No ML Use.pdf written in PDF format)
+(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif written in TIFF format)
+
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif
+  /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif
 
 {com}. 
 . set graphics on
@@ -1080,6 +1110,12 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}
 {com}. 
+. `newpara' // TODO: This text is not automatically generated.
+{res}{txt}
+{com}. 
+. `newpara' // TODO: This text is not automatically generated.
+{res}{txt}
+{com}. 
 . // Start a new page.
 . putdocx pagebreak
 {res}{txt}
@@ -1093,6 +1129,21 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {txt}  5{com}.   putdocx text ("`title'")
 {txt}  6{com}.   putdocx image "products/Time-to-completion for `comparison_name'.png", linebreak
 {txt}  7{com}. {c )-}
+{res}{txt}
+{com}. 
+. // Discussion section
+. `heading'
+{res}{txt}
+{com}. putdocx text ("Discussion")
+{res}{txt}
+{com}. 
+. `newpara' // TODO: This text is not automatically generated.
+{res}{txt}
+{com}. 
+. `newpara' // TODO: This text is not automatically generated.
+{res}{txt}
+{com}. 
+. `newpara' // TODO: This text is not automatically generated.
 {res}{txt}
 {com}. 
 . `heading'
