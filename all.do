@@ -17,8 +17,7 @@ do data/data
 
 // Clear the data and then use the processed data.
 clear
-use ${exported_data_file}
-stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
+do data/use
 
 // Do estimation.
 do estimation/estimate

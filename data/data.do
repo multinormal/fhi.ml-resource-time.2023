@@ -1,5 +1,12 @@
 version 16.1
 
+// Only import and process the data if necessary.
+if fileexists("${exported_data_file}") {
+  disp "{hline}"
+  disp as result "Using existing processed data"
+  exit
+}
+
 // Load the data and check its signature is as expected.
 import excel "${data_file}", sheet("${sheet_name}") cellrange(${cellrange}) firstrow allstring
 datasignature

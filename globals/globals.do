@@ -3,7 +3,8 @@ version 16.1
 global data_file  "data/raw/Final data sheet_31012023_jm.xlsx"
 global sheet_name "Data Extraction Form"
 global cellrange  A1:BE40
-global signature "39:57(80915):1037905700:239166213"
+global signature           "39:57(80915):1037905700:239166213" // Signature of raw data.
+global processed_signature "39:13(85310):351721399:2468083089" // Signature of processed data.
 
 global exported_data_file "products/resource-time.dta"
 
