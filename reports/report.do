@@ -43,15 +43,17 @@ regression adjustment model (LAC-IPWRA; Stata's stteffects command). Ongoing
 reviews were right censored at the end of data collection (31 January 2023) 
 and all analyses accounted for this censoring. We had no reason to suspect 
 informative (nonrandom) censoring, so did not model a censoring mechanism. 
-We re-expressed all estimates as ratios (relative resource use and relative 
-time-to-completion) to aid generalization to other institutions. We did this 
-by exponentiating differences in log resource use, and by computing ratios of 
-mean times-to-completion using the delta method. We present two-sided 
-95% confidence intervals and p-values where appropriate and use a 
-prespecified p < 0.05 significance criterion throughout. We also 
-present the time-to-completion data using Kaplan-Meier estimates of survivor 
-functions (but note that these do not account for nonrandom endogenous treatment 
-assignment).
+Normality of residuals from the analyses of resource use were assessed using 
+the Shapiro-Wilk test. To aid generalization to other institutions, we 
+re-expressed analysis results as estimates of ratios (relative resource 
+use and relative time-to-completion). We did this by exponentiating differences 
+in mean log resource use, and by computing ratios of mean times-to-completion 
+using the delta method. We present two-sided 95% confidence intervals and 
+p-values where appropriate and use a prespecified p < 0.05 significance 
+criterion throughout. We also present the time-to-completion data using 
+Kaplan-Meier estimates of survivor functions (but note that these do not account 
+for nonrandom endogenous treatment assignment and are not adjusted for planned 
+meta-analysis).
 putdocx textblock end
 
 `heading'
