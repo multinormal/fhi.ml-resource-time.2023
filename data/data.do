@@ -35,11 +35,6 @@ rename UpdateYN `update'
 replace `update' = strtrim(`update')
 encode `update', generate(update)
 
-// Rename and encode the variable that codes for whether product is an HTA.
-tempvar hta
-rename HTAYorN `hta'
-encode `hta', generate(hta)
-
 // Define treatment variables.
 // Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recommended ML.
 // We define "intervention" (i.e., the type of ML use we would prefer reviewers to use) as 1, and "control" as 0.
@@ -80,7 +75,7 @@ label variable any_vs_none   "Any vs No ML Use"
 // Note: We do not use the other comparisons, so will not rename them.
 
 // Define a value label for analyses that can be prespecified.
-label define planned 0 No 1 Yes
+label define no_yes_label 0 No 1 Yes
 
 // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
 // quantitative and qualitative), and NMA.
@@ -96,15 +91,21 @@ local nma_planned_label           "Was NMA planned?"
 foreach p of local planned {
   generate       ``p'' = 0
   replace        ``p'' = 1 if `p' != "N" // Works for one value coded "Both".
-  label values   ``p'' planned
+  label values   ``p'' no_yes_label
   label variable ``p'' "```p''_label'"
   drop `p'
 }
 
+// Define the HTA variable.
+generate hta = 0
+replace  hta = 1 if HTAYorN == "Y"
+label values   hta no_yes_label
+label variable hta "Health technology assessment?"
+
 // Define the prespecified variable (whether a protocol was published).
 generate prespecified = 0
 replace  prespecified = 1 if regexm(ProtocolLink, "http.*")
-label values   prespecified planned
+label values   prespecified no_yes_label
 label variable prespecified "Was the work pre-specified?"
 drop ProtocolLink
 
@@ -155,6 +156,7 @@ assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
 
 // Keep just the variables necessary for analysis.
 local to_keep completion completed commission ${resource_outcome} *_vs_* prespecified ${adj_var} ${endo_vars}
+local to_keep `to_keep' hta nma_planned synthesis_planned
 local to_keep = subinstr("`to_keep'", "i.", "", .)
 keep `to_keep'
 save ${exported_data_file}, replace
