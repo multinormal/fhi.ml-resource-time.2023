@@ -60,19 +60,19 @@ putdocx text ("Protocol Deviations")
 `newpara'
 It was not possible to model nonrandom endogenous treatment assignment using 
 both prespecified variables (field and prespecification) in the analyses of 
-resource use. We therefore used one of the two variables, choosing the variable 
-with the smallest standard error in the model of treatment assignment. 
-Endogeneous assignment of any or recommended ML was modelled by field 
-(welfare reviews were generally more likely to use ML) and recommended ML 
-use was modelled by prespecification (reviews with protocols were generally 
-less likely to use recommended ML).
+resource use because the models did not converge. We therefore used one of 
+the two variables, choosing the variable with the smallest standard error 
+in the model of treatment assignment. Endogenous assignment of any or 
+recommended ML was modelled by field (welfare reviews were generally more 
+likely to use ML) and recommended ML use was modelled by prespecification 
+(reviews with protocols were generally less likely to use recommended ML).
 putdocx textblock end
 
 `newpara'
 We updated the preprint version of the protocol during data extraction but before starting the 
 analysis or unblinding the statistician (CJR) to redefine the comparisons in terms of under- and 
-overuse of machine learning. However, only two reviews were judged to have 
-under- or overused machine learning, so it was not possible to perform the revised analyses. We 
+overuse of machine learning. However, too few reviews were judged to have 
+under- or overused ML, so it was not possible to run these analyses. We 
 therefore performed and report the analyses as originally planned.
 putdocx textblock end
 
@@ -89,31 +89,27 @@ results_table
 `newpara' // TODO: This text is not automatically generated.
 The strength of evidence for endogeneity varied by comparison. For example, 
 the correlation between use of any versus no ML and resource use was 0.95 
-(95% CI 0.25 to 1.00; p<0.0001) while that for use of recommended versus 
+(95% CI 0.25 to 1.00; p<0.0001) while that for recommended versus 
 no ML use was 0.01 (95% CI -0.97 to 0.97; p=0.99). However, as far as possible, 
 we chose to account for possible endogeneity according to our protocol.
 putdocx textblock end
 
 `newpara' // TODO: This text is not automatically generated.
-Accounting for endogeneity and censoring, the adjusted point estimate for relative 
-resource use suggests that reviews that use ML as recommended use 3.7 times as much resource 
-as reviews that do not use ML, however this estimate is very imprecise 
-(95% CI 0.4 to 37.9; p=0.269). We estimate that reviews that use any 
-ML use 0.7 times as much resource as reviews that do not use ML, but this estimate is also 
-uncertain (95% CI 0.2 to 1.9; p=0.439). We estimate that 
-reviews that use ML as recommended use 0.5 times as much resource as reviews that use non-recommended 
-ML, but again that estimate is very uncertain (95% CI 0.0 to 10.7; p=0.658).
-putdocx textblock end
-
-`newpara' // TODO: This text is not automatically generated.
-Accounting for endogeneity and censoring, the adjusted estimate for time-to-completion 
-suggests that that reviews that use ML as recommended are completed in 90% of the time 
-of reviews that do not use ML, however this estimate is uncertain 
-(95% CI 0.5 to 1.6; p=0.753). We estimate that reviews that use any 
-ML are also completed in 90% of the time of reviews that do not use ML, but this estimate 
-is also uncertain (95% CI 0.6 to 1.5; p=0.784). We estimate that 
-reviews that use ML as recommended take 10% longer to complete than reviews that use non-recommended 
-ML, but again that estimate is uncertain (95% CI 0.7 to 1.9; p=0.658).
+Due to the smaller than anticipated sample size, none of the effect estimates were 
+sufficiently precise to be able to conclude that use of recommended or any ML is 
+associated with more or less resource use, or longer or shorter time-to-completion, 
+compared to no or non-recommended ML use (i.e., all confidence intervals include the 
+null). For resource use, point estimates favor recommended and any ML use over 
+non-recommended and no ML use, while no ML use is favored over recommended ML use. 
+For time-to-completion, point estimates favor recommended and any ML use over 
+no ML use, while non-recommended ML use is favored over recommended ML use. The 
+estimates are generally but not always consistent with the sample means and 
+Kaplan-Meier plots. Note that the sample means may be quite misleading due to 
+possible confounding (nonrandom endogenous treatment assignment), do not account 
+for censoring, and are not adjusted for the effect of planned meta-analysis, which 
+is associated with more resource use and longer time-to-completion. The Kaplan-Meier 
+plots show censored reviews, but do not account for endogeneity and are not adjusted 
+for planned meta-analysis.
 putdocx textblock end
 
 // Start a new page.
@@ -128,6 +124,45 @@ foreach comparison of global comparisons {
   putdocx text ("`title'")
   putdocx image "products/Time-to-completion for `comparison_name'.png", linebreak
 }
+
+// Discussion section
+`heading'
+putdocx text ("Discussion")
+
+`newpara' // TODO: This text is not automatically generated.
+Results for the resource use outcome are a little challenging to interpret. The effect 
+estimates suggest that recommended or any ML use is associated with less resource use 
+compared to non-recommended or no ML use, but the sample means for the any versus no ML use 
+comparison suggest the opposite (but could be quite misleading). The effect estimate suggests that 
+recommended ML use is associated with substantially more resource use compared to no ML use, 
+and this is also reflected by the sample means. We find this result quite surprising, but it 
+could be explained by confounding that we have not been able to account for. For example, 
+perhaps reviews that did not use ML did not do so because they were judged to be "easy", and 
+"easy" reviews are not resource intensive.
+putdocx textblock end
+
+`newpara' // TODO: This text is not automatically generated.
+Results for the time-to-completion outcome are somewhat easier to interpret. The effect 
+estimates suggest that recommended or any ML use is associated with shorter time-to-completion 
+compared to no ML use. These results are consistent with our experience and with one of 
+the associated sets of sample means. The point estimate for the recommended versus 
+non-recommended comparison slightly favors non-recommended ML use, but the sample means 
+strongly suggest otherwise. Because the estimate is imprecise, and the point estimate is 
+close to the null, it would not surprise us if the direction of effect is wrong.
+putdocx textblock end
+
+`newpara' // TODO: This text is not automatically generated.
+We think the results for the time-to-completion outcome are somewhat easier to interpret than 
+those for resource use because review commission and completion dates (which are used to 
+define time-to-completion) are well-defined and easy to measure, while resource use is essentially 
+a self-reported outcome. Researchers at our institute use a web- or mobile app-based system 
+to allocate hours worked to specific projects. There is likely to be inter-researcher 
+differences in reporting, which could lead to substantial variation in outcome measurements. 
+In addition, confounding may occur if researchers who under- or over-allocate hours are also more likely to 
+use or not use ML. While confounding may also occur for time-to-completion outcomes, it may be 
+easier to account for in analysis. For these reasons, we suggest that future studies specify 
+well-defined time-to-completion outcomes as being of primary interest.
+putdocx textblock end
 
 `heading'
 putdocx text ("Appendix — Full Regression Results")
