@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}20 Apr 2023, 12:02:21
+ {txt}opened on:  {res}20 Apr 2023, 17:52:52
 {txt}
 {com}. 
 . // Set up globals.
@@ -18,7 +18,9 @@
 {txt}
 {com}. global cellrange  A1:BE40
 {txt}
-{com}. global signature "39:57(80915):1037905700:239166213"
+{com}. global signature           "39:57(80915):1037905700:239166213" // Signature of raw data.
+{txt}
+{com}. global processed_signature "39:25(49135):120443126:1133946948" // Signature of processed data.
 {txt}
 {com}. 
 . global exported_data_file "products/resource-time.dta"
@@ -120,10 +122,20 @@
 {com}. version 16.1
 {txt}
 {com}. 
+. // Only import and process the data if necessary.
+. if fileexists("${c -(}exported_data_file{c )-}") {c -(}
+.   disp "{c -(}hline{c )-}"
+.   disp as result "Using existing processed data"
+.   exit
+. {c )-}
+{txt}
+{com}. 
 . // Load the data and check its signature is as expected.
 . import excel "${c -(}data_file{c )-}", sheet("${c -(}sheet_name{c )-}") cellrange(${c -(}cellrange{c )-}) firstrow allstring
 {res}{text}(57 vars, 39 obs)
 
+{com}. frame copy default orig // TODO: REMOVE THIS
+{txt}
 {com}. datasignature
   {res}39:57(80915):1037905700:239166213
 {txt}
@@ -171,14 +183,6 @@
 {txt}(2 real changes made)
 
 {com}. encode `update', generate(update)
-{txt}
-{com}. 
-. // Rename and encode the variable that codes for whether product is an HTA.
-. tempvar hta
-{txt}
-{com}. rename HTAYorN `hta'
-{res}{txt}
-{com}. encode `hta', generate(hta)
 {txt}
 {com}. 
 . // Define treatment variables.
@@ -264,39 +268,101 @@
 {com}. // Note: We do not use the other comparisons, so will not rename them.
 . 
 . // Define a value label for analyses that can be prespecified.
-. label define planned 0 No 1 Yes
+. label define no_yes_label 0 No 1 Yes
 {txt}
 {com}. 
 . // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
-. // quantitative and qualitative), and NMA.
-. local planned SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
+. // quantitative and qualitative), NMA, etc.
+. local vars        SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
 {txt}
-{com}. local ProtocolavailableYorN        prespecified          // New variable name.
+{com}. local vars `vars' Rankingalgorithmduringstudyi Classifiersduringstudyidenti Classifiersduringdataextracti
 {txt}
-{com}. local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
+{com}. local vars `vars' Clusteringduringstudyidentifi Clusteringduringdataextractio OpenAlexduringstudyidentifica
 {txt}
-{com}. local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
+{com}. local vars `vars' RoBassessmentYorN AutomateddataextractionYor OtherMLYorN
 {txt}
-{com}. local SynthesisplannedNMAYorN      nma_planned           // New variable name.
+{com}. local ProtocolavailableYorN           prespecified              // New variable name.
 {txt}
-{com}. local synthesis_planned_label     "Was any synthesis planned?"
+{com}. local SynthesisplannednoneYorN        synthesis_planned         // New variable name.
 {txt}
-{com}. local meta_analysis_planned_label "Was meta-analysis planned?"
+{com}. local SynthesisplannedMetaAnalysis    meta_analysis_planned     // New variable name.
 {txt}
-{com}. local nma_planned_label           "Was NMA planned?"
+{com}. local SynthesisplannedNMAYorN         nma_planned               // New variable name.
+{txt}
+{com}. local Rankingalgorithmduringstudyi    ranking_identification    // New variable name.
+{txt}
+{com}. local Classifiersduringstudyidenti    classifier_identification // New variable name.
+{txt}
+{com}. local Classifiersduringdataextracti   classifier_extraction     // New variable name.
+{txt}
+{com}. local Clusteringduringstudyidentifi   clustering_identification // New variable name.
+{txt}
+{com}. local Clusteringduringdataextractio   clustering_extraction     // New variable name.
+{txt}
+{com}. local OpenAlexduringstudyidentifica   openalex_identification   // New variable name.
+{txt}
+{com}. local RoBassessmentYorN               rob_assessment            // New variable name.
+{txt}
+{com}. local AutomateddataextractionYor      automated_extraction      // New variable name.
+{txt}
+{com}. local OtherMLYorN                     other_ml                  // New variable name.
+{txt}
+{com}. local synthesis_planned_label         "Was any synthesis planned?"
+{txt}
+{com}. local meta_analysis_planned_label     "Was meta-analysis planned?"
+{txt}
+{com}. local nma_planned_label               "Was NMA planned?"
+{txt}
+{com}. local ranking_identification_label    "Ranking algorithm during study identification"
+{txt}
+{com}. local classifier_identification_label "Classifiers during study identification"
+{txt}
+{com}. local classifier_extraction_label     "Classifiers during data extraction"
+{txt}
+{com}. local clustering_identification_label "Clustering during study identification"
+{txt}
+{com}. local clustering_extraction_label     "Clustering during data extraction"
+{txt}
+{com}. local openalex_identification_label   "OpenAlex during study identification"
+{txt}
+{com}. local rob_assessment_label            "ML for RoB assessment"
+{txt}
+{com}. local automated_extraction            "Automated data extraction"
+{txt}
+{com}. local other_ml_label                  "Other ML"
 {txt}
 {com}. 
-. foreach p of local planned {c -(}
+. foreach p of local vars {c -(}
 {txt}  2{com}.   generate       ``p'' = 0
 {txt}  3{com}.   replace        ``p'' = 1 if `p' != "N" // Works for one value coded "Both".
-{txt}  4{com}.   label values   ``p'' planned
+{txt}  4{com}.   label values   ``p'' no_yes_label
 {txt}  5{com}.   label variable ``p'' "```p''_label'"
 {txt}  6{com}.   drop `p'
 {txt}  7{com}. {c )-}
 {txt}(20 real changes made)
 (18 real changes made)
 (0 real changes made)
+(25 real changes made)
+(12 real changes made)
+(0 real changes made)
+(8 real changes made)
+(1 real change made)
+(5 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
 
+{com}. 
+. // Define the HTA variable.
+. generate hta = 0
+{txt}
+{com}. replace  hta = 1 if HTAYorN == "Y"
+{txt}(7 real changes made)
+
+{com}. label values   hta no_yes_label
+{txt}
+{com}. label variable hta "Health technology assessment?"
+{txt}
 {com}. 
 . // Define the prespecified variable (whether a protocol was published).
 . generate prespecified = 0
@@ -304,7 +370,7 @@
 {com}. replace  prespecified = 1 if regexm(ProtocolLink, "http.*")
 {txt}(16 real changes made)
 
-{com}. label values   prespecified planned
+{com}. label values   prespecified no_yes_label
 {txt}
 {com}. label variable prespecified "Was the work pre-specified?"
 {txt}
@@ -332,7 +398,7 @@
 {com}. rename ResourceUsePersonHours `resource'
 {res}{txt}
 {com}. destring `resource', replace force // One missing outcome.
-{txt}__000005: contains nonnumeric characters; {res}replaced {txt}as {res}int
+{txt}__000004: contains nonnumeric characters; {res}replaced {txt}as {res}int
 {txt}(1 missing value generated)
 {res}{txt}
 {com}. generate log_resource1 = log(`resource')
@@ -400,12 +466,15 @@
 . // Keep just the variables necessary for analysis.
 . local to_keep completion completed commission ${c -(}resource_outcome{c )-} *_vs_* prespecified ${c -(}adj_var{c )-} ${c -(}endo_vars{c )-}
 {txt}
+{com}. local to_keep `to_keep' hta nma_planned synthesis_planned *_identification *_extraction rob_assessment other_ml
+{txt}
 {com}. local to_keep = subinstr("`to_keep'", "i.", "", .)
 {txt}
 {com}. keep `to_keep'
 {txt}
 {com}. save ${c -(}exported_data_file{c )-}, replace
-{txt}file products/resource-time.dta saved
+{txt}(note: file products/resource-time.dta not found)
+file products/resource-time.dta saved
 
 {com}. 
 {txt}end of do-file
@@ -414,9 +483,21 @@
 . // Clear the data and then use the processed data.
 . clear
 {txt}
-{com}. use ${c -(}exported_data_file{c )-}
+{com}. do data/use
 {txt}
-{com}. stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
+{com}. version 16.1
+{txt}
+{com}. 
+. use ${c -(}exported_data_file{c )-}
+{txt}
+{com}. datasignature
+  {res}39:25(49135):120443126:1133946948
+{txt}
+{com}. assert r(datasignature) == "${c -(}processed_signature{c )-}"
+{txt}
+{com}. 
+. // stset the data.
+. stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
      {txt}failure event:  {res}completed != 0 & completed < .
 {txt}obs. time interval:  {res}(origin, completion]
@@ -435,6 +516,9 @@
                                      {txt}earliest observed entry t = {res}        0
                                           {txt}last observed exit t = {res} 102.1429
 {txt}
+{com}. 
+{txt}end of do-file
+
 {com}. 
 . // Do estimation.
 . do estimation/estimate
@@ -961,6 +1045,115 @@ meta_analysis_planned {c |}
 {res}{txt}
 {com}. putdocx text ("Results")
 {res}{txt}
+{com}. 
+. // Insert the table of sample characteristics.
+. sample_characteristics
+{res}  39
+  12
+  21
+  6
+  21
+  12
+  27
+  39
+  12
+  19
+  5
+  19
+  12
+  24
+  39
+  3
+  2
+  2
+  2
+  3
+  4
+  39
+  9
+  19
+  4
+  19
+  9
+  23
+  39
+  11
+  19
+  6
+  19
+  11
+  25
+  39
+  4
+  10
+  4
+  10
+  4
+  14
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+  39
+  0
+  19
+  6
+  19
+  0
+  25
+  39
+  0
+  9
+  3
+  9
+  0
+  12
+  39
+  0
+  6
+  2
+  6
+  0
+  8
+  39
+  0
+  5
+  0
+  5
+  0
+  5
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+  39
+  0
+  1
+  0
+  1
+  0
+  1
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+{txt}
 {com}. 
 . // Insert the table of results.
 . results_table
