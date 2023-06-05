@@ -1,9 +1,12 @@
 version 16.1
 
-global data_file  "data/raw/Blinded data sheet_060323 - Downloaded 07-03-2023.xlsx"
+global data_file  "data/raw/Final data sheet_31012023_jm.xlsx"
 global sheet_name "Data Extraction Form"
-global cellrange  A1:AC40
-global signature "39:29(69325):2253827172:810722692"
+global cellrange  A1:BE40
+global signature           "39:57(80915):1037905700:239166213" // Signature of raw data.
+global processed_signature "39:25(49135):120443126:1133946948" // Signature of processed data.
+
+global exported_data_file "products/resource-time.dta"
 
 global random_seed 1234
 

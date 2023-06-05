@@ -12,8 +12,12 @@ do globals/models
 // Set up Stata.
 do setup/setup
 
-// Import and process the data.
+// Import, process the data.
 do data/data
+
+// Clear the data and then use the processed data.
+clear
+do data/use
 
 // Do estimation.
 do estimation/estimate

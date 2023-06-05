@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res} 9 Mar 2023, 10:31:36
+ {txt}opened on:  {res} 5 Jun 2023, 13:02:37
 {txt}
 {com}. 
 . // Set up globals.
@@ -12,13 +12,18 @@
 {com}. version 16.1
 {txt}
 {com}. 
-. global data_file  "data/raw/Blinded data sheet_060323 - Downloaded 07-03-2023.xlsx"
+. global data_file  "data/raw/Final data sheet_31012023_jm.xlsx"
 {txt}
 {com}. global sheet_name "Data Extraction Form"
 {txt}
-{com}. global cellrange  A1:AC40
+{com}. global cellrange  A1:BE40
 {txt}
-{com}. global signature "39:29(69325):2253827172:810722692"
+{com}. global signature           "39:57(80915):1037905700:239166213" // Signature of raw data.
+{txt}
+{com}. global processed_signature "39:25(49135):120443126:1133946948" // Signature of processed data.
+{txt}
+{com}. 
+. global exported_data_file "products/resource-time.dta"
 {txt}
 {com}. 
 . global random_seed 1234
@@ -58,16 +63,19 @@
 {com}. version 16.1
 {txt}
 {com}. 
+. // Specify the time use models.
 . foreach comparison of global comparisons {c -(}
-{txt}  2{com}.   global `comparison'_resource_model eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(`comparison' = ${c -(}endo_vars{c )-} , nointeract)
-{txt}  3{com}.   global `comparison'_time_model     stteffects ipwra (${c -(}adj_var{c )-}) (`comparison' ${c -(}endo_vars{c )-}) , aequations
-{txt}  4{com}. {c )-}
+{txt}  2{com}.   global `comparison'_time_model     stteffects ipwra (${c -(}adj_var{c )-}) (`comparison' ${c -(}endo_vars{c )-}) , aequations
+{txt}  3{com}. {c )-}
 {txt}
 {com}. 
-. // Override the following analyses because there is no clear evidence of endogenicity for treatment assignment
-. // for field or prespecification, except on the basis of an exploratory logistic regression that suggests that
-. // field may predict treatment assignment.
-. global rec_vs_nonrec_resource_model intreg ${c -(}resource_outcome{c )-} i.rec_vs_nonrec ${c -(}adj_var{c )-}
+. // Specify the resource use models.
+. // We cannot use both variables to predict treatment in these analyses, and using the wrong one leads to nonsensical results (very large SEs on the treatment predictions).
+. global rec_vs_none_resource_model   eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(rec_vs_none   = i.field ,        nointeract)
+{txt}
+{com}. global rec_vs_nonrec_resource_model eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(rec_vs_nonrec = i.prespecified , nointeract)
+{txt}
+{com}. global any_vs_none_resource_model   eintreg ${c -(}resource_outcome{c )-} ${c -(}adj_var{c )-} , entreat(any_vs_none   = i.field ,        nointeract)
 {txt}
 {com}. 
 {txt}end of do-file
@@ -101,218 +109,45 @@
 {com}. set sformat %8.2f
 {txt}
 {com}. 
+. // Set the graphics scheme.
+. set scheme white_background
+{txt}
+{com}. 
 {txt}end of do-file
 
 {com}. 
-. // Import and process the data.
+. // Import, process the data.
 . do data/data
 {txt}
 {com}. version 16.1
 {txt}
 {com}. 
-. // Load the data and check its signature is as expected.
-. import excel "${c -(}data_file{c )-}", sheet("${c -(}sheet_name{c )-}") cellrange(${c -(}cellrange{c )-}) firstrow allstring
-{res}{text}(29 vars, 39 obs)
+. // Only import and process the data if necessary.
+. if fileexists("${c -(}exported_data_file{c )-}") {c -(}
+.   disp "{c -(}hline{c )-}"
+{res}{hline}
+{com}.   disp as result "Using existing processed data"
+{res}Using existing processed data
+{com}.   exit
 
+{txt}end of do-file
+
+{com}. 
+. // Clear the data and then use the processed data.
+. clear
+{txt}
+{com}. do data/use
+{txt}
+{com}. version 16.1
+{txt}
+{com}. 
+. use ${c -(}exported_data_file{c )-}
+{txt}
 {com}. datasignature
-  {res}39:29(69325):2253827172:810722692
+  {res}39:25(49135):120443126:1133946948
 {txt}
-{com}. assert r(datasignature) == "${c -(}signature{c )-}"
+{com}. assert r(datasignature) == "${c -(}processed_signature{c )-}"
 {txt}
-{com}. 
-. // Define a variable that specifies the product's year.
-. tempvar year
-{txt}
-{com}. rename Year `year'
-{res}{txt}
-{com}. destring `year', generate(year)
-{txt}__000000: all characters numeric; year {res}generated {txt}as {res}int
-{txt}
-{com}. 
-. // Rename and encode the health/welfare variable.
-. tempvar field
-{txt}
-{com}. rename AreaHealthorWelfare `field'
-{res}{txt}
-{com}. replace `field' = "Healthcare" if `field' == "H"
-{txt}variable {bf}__000001{sf} was {bf}{res}str1{sf}{txt} now {bf}{res}str10{sf}
-{txt}(19 real changes made)
-
-{com}. replace `field' = "Welfare"    if `field' == "W"
-{txt}(20 real changes made)
-
-{com}. encode `field' , generate(field)
-{txt}
-{com}. 
-. // Rename and encode the variable that codes for the type of product.
-. tempvar product_type
-{txt}
-{com}. rename Typeofproduct `product_type'
-{res}{txt}
-{com}. encode `product_type', generate(product_type)
-{txt}
-{com}. 
-. // Rename and encode the variable that codes for whether product is an update.
-. tempvar update
-{txt}
-{com}. rename UpdateYN `update'
-{res}{txt}
-{com}. replace `update' = strtrim(`update')
-{txt}(2 real changes made)
-
-{com}. encode `update', generate(update)
-{txt}
-{com}. 
-. // Rename and encode the variable that codes for whether product is an HTA.
-. tempvar hta
-{txt}
-{com}. rename HTAYorN `hta'
-{res}{txt}
-{com}. encode `hta', generate(hta)
-{txt}
-{com}. 
-. // Define treatment variables.
-. // Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recomended ML.
-. local treatments RecommendedvsNone RecommendedvsNonrecom AnyvsNone Recomvsunderuse Recomvsoveruse
-{txt}
-{com}. local RecommendedvsNone     rec_vs_none   // New variable name.
-{txt}
-{com}. local RecommendedvsNonrecom rec_vs_nonrec // New variable name.
-{txt}
-{com}. local AnyvsNone             any_vs_none   // New variable name.
-{txt}
-{com}. local Recomvsunderuse       rec_vs_under  // New variable name.
-{txt}
-{com}. local Recomvsoveruse        rec_vs_over   // New variable name.
-{txt}
-{com}. foreach t of local treatments {c -(}
-{txt}  2{com}.   replace `t' = "" if !regexm(`t', "[A-Z]") // Non-missing values are letters in [A-Z]
-{txt}  3{com}.   encode  `t', generate(``t'')
-{txt}  4{com}.   drop `t'
-{txt}  5{com}. {c )-}
-{txt}(6 real changes made)
-(12 real changes made)
-(0 real changes made)
-(14 real changes made)
-(18 real changes made)
-
-{com}. 
-. // Define the variable labels for the comaprisons.
-. label variable rec_vs_none   "Recommended vs No ML Use"
-{txt}
-{com}. label variable rec_vs_nonrec "Recommended vs Non-recommended ML Use"
-{txt}
-{com}. label variable any_vs_none   "Any vs No ML Use"
-{txt}
-{com}. // Note: We do not use the other comparisons, so will not rename them.
-. 
-. // Define a value label for analyses that can be prespecified.
-. label define planned 0 No 1 Yes
-{txt}
-{com}. 
-. // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
-. // quantitative and qualitative), and NMA.
-. local planned ProtocolavailableYorN SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
-{txt}
-{com}. local ProtocolavailableYorN        prespecified          // New variable name.
-{txt}
-{com}. local SynthesisplannednoneYorN     synthesis_planned     // New variable name.
-{txt}
-{com}. local SynthesisplannedMetaAnalysis meta_analysis_planned // New variable name.
-{txt}
-{com}. local SynthesisplannedNMAYorN      nma_planned           // New variable name.
-{txt}
-{com}. local prespecified_label          "Was the work pre-specified?"
-{txt}
-{com}. local synthesis_planned_label     "Was any synthesis planned?"
-{txt}
-{com}. local meta_analysis_planned_label "Was meta-analysis planned?"
-{txt}
-{com}. local nma_planned_label           "Was NMA planned?"
-{txt}
-{com}. foreach p of local planned {c -(}
-{txt}  2{com}.   generate       ``p'' = 0
-{txt}  3{com}.   replace        ``p'' = 1 if `p' != "N" // Works for one value coded "Both".
-{txt}  4{com}.   label values   ``p'' planned
-{txt}  5{com}.   label variable ``p'' "```p''_label'"
-{txt}  6{com}.   drop `p'
-{txt}  7{com}. {c )-}
-{txt}(26 real changes made)
-(20 real changes made)
-(18 real changes made)
-(0 real changes made)
-
-{com}. 
-. // Define a completed variable (analogous to a failure indicator in survival analysis).
-. generate          completed = 1
-{txt}
-{com}. replace           completed = 0 if OngoingYorN == "Y"
-{txt}(3 real changes made)
-
-{com}. label    define   completed 0 No 1 Yes
-{txt}
-{com}. label    values   completed completed
-{txt}
-{com}. label    variable completed "Report completed?"
-{txt}
-{com}. drop OngoingYorN
-{txt}
-{com}. 
-. // Define the resource use variable.
-. tempvar resource
-{txt}
-{com}. rename ResourceUsePersonHours `resource'
-{res}{txt}
-{com}. destring `resource', replace force // One missing outcome. TODO: Note this in the report.
-{txt}__000005: contains nonnumeric characters; {res}replaced {txt}as {res}int
-{txt}(1 missing value generated)
-{res}{txt}
-{com}. generate log_resource1 = log(`resource')
-{txt}(1 missing value generated)
-
-{com}. generate log_resource2 = log(`resource')
-{txt}(1 missing value generated)
-
-{com}. replace  log_resource2 = . if !completed // For right-censored data.
-{txt}(3 real changes made, 3 to missing)
-
-{com}. label variable log_resource1 "Resource use (log person-hours)"
-{txt}
-{com}. label variable log_resource2 "Resource use (log person-hours); possibly censored"
-{txt}
-{com}. 
-. // Define commision date variable.
-. tempvar c_day c_month c_year commission
-{txt}
-{com}. rename CommissionDay131   `c_day'
-{res}{txt}
-{com}. rename CommissionMonth112 `c_month'
-{res}{txt}
-{com}. rename CommissionYear2020 `c_year'
-{res}{txt}
-{com}. generate `commission' = `c_day' + "/" + `c_month' + "/" + `c_year'
-{txt}
-{com}. generate commission = date(`commission', "DMY")
-{txt}
-{com}. 
-. // Define completion date variable.
-. tempvar c_day c_month c_year completion
-{txt}
-{com}. rename CompletionDay131   `c_day'
-{res}{txt}
-{com}. rename CompletionMonth112 `c_month'
-{res}{txt}
-{com}. rename CompletionYear2020 `c_year'
-{res}{txt}
-{com}. generate `completion' = `c_day' + "/" + `c_month' + "/" + `c_year'
-{txt}
-{com}. generate completion = date(`completion', "DMY")
-{txt}(3 missing values generated)
-
-{com}. // Set right-censoring date for ongoing reviews.
-. replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
-{txt}(3 real changes made)
-
 {com}. 
 . // stset the data.
 . stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
@@ -325,29 +160,16 @@
 
 {txt}{hline 78}
 {res}         39{txt}  total observations
-{res}          0{txt}  exclusions
+{res}          1{txt}  observation ends on or before enter()
 {hline 78}
-{res}         39{txt}  observations remaining, representing
-{res}         36{txt}  failures in single-record/single-failure data
-{res}  1,236.286{txt}  total analysis time at risk and under observation
+{res}         38{txt}  observations remaining, representing
+{res}         35{txt}  failures in single-record/single-failure data
+{res}  1,211.571{txt}  total analysis time at risk and under observation
                                                 at risk from t = {res}        0
                                      {txt}earliest observed entry t = {res}        0
                                           {txt}last observed exit t = {res} 102.1429
 {txt}
 {com}. 
-. // We do not have data on number of downloads or comissioner satisfaction.
-. drop Commissionersatisfactionoveral Numberofdownloadstodate
-{txt}
-{com}. 
-. // Ensure that there are no NMAs in the sample.
-. levelsof nma_planned
-{res}{txt}0
-
-{com}. assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
-{txt}
-{com}. 
-. // TODO: Drop other variables with uppercase first letters?
-. 
 {txt}end of do-file
 
 {com}. 
@@ -382,34 +204,9 @@
 {hline}
 {res}Analysis for: {ul:rec_vs_none} with respect to {ul:resource}
 
-{txt}Iteration 0:{space 3}log likelihood = {res:-48.854513}  (not concave)
-Iteration 1:{space 3}log likelihood = {res:-47.539267}  
-Iteration 2:{space 3}log likelihood = {res:-46.952625}  
-Iteration 3:{space 3}log likelihood = {res: -46.78175}  
-Iteration 4:{space 3}log likelihood = {res:-46.747541}  (not concave)
-Iteration 5:{space 3}log likelihood = {res:-46.735474}  (not concave)
-Iteration 6:{space 3}log likelihood = {res:-46.733904}  (not concave)
-Iteration 7:{space 3}log likelihood = {res:-46.729976}  (not concave)
-Iteration 8:{space 3}log likelihood = {res:-46.723602}  (not concave)
-Iteration 9:{space 3}log likelihood = {res:-46.716846}  (not concave)
-Iteration 10:{space 2}log likelihood = {res:-46.702513}  (not concave)
-Iteration 11:{space 2}log likelihood = {res:-46.698735}  (not concave)
-Iteration 12:{space 2}log likelihood = {res:-46.691089}  (not concave)
-Iteration 13:{space 2}log likelihood = {res:-46.684591}  (not concave)
-Iteration 14:{space 2}log likelihood = {res:-46.675078}  (not concave)
-Iteration 15:{space 2}log likelihood = {res:-46.658854}  (not concave)
-Iteration 16:{space 2}log likelihood = {res:-46.482007}  (not concave)
-Iteration 17:{space 2}log likelihood = {res:-46.117002}  (not concave)
-Iteration 18:{space 2}log likelihood = {res: -46.01619}  (not concave)
-Iteration 19:{space 2}log likelihood = {res:-45.709064}  (not concave)
-Iteration 20:{space 2}log likelihood = {res:-45.526644}  (not concave)
-Iteration 21:{space 2}log likelihood = {res:-45.306664}  
-Iteration 22:{space 2}log likelihood = {res:-45.285105}  
-Iteration 23:{space 2}log likelihood = {res:-45.165545}  
-Iteration 24:{space 2}log likelihood = {res:-45.153161}  
-Iteration 25:{space 2}log likelihood = {res:-45.152341}  
-Iteration 26:{space 2}log likelihood = {res:-45.152292}  
-Iteration 27:{space 2}log likelihood = {res:-45.152288}  
+{txt}Iteration 0:{space 3}log likelihood = {res:-55.193566}  
+Iteration 1:{space 3}log likelihood = {res:-55.193557}  
+Iteration 2:{space 3}log likelihood = {res:-55.193557}  
 {res}
 {txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
 {txt}{col 49}   Uncensored{col 67}= {res}        30
@@ -417,32 +214,27 @@ Iteration 27:{space 2}log likelihood = {res:-45.152288}
 {txt}{col 49}   Right-censored{col 67}= {res}         2
 {txt}{col 49}   Interval-cens.{col 67}= {res}         0
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}  12212.91
-{txt}Log likelihood = {res}-45.152288{txt}{col 49}Prob > chi2{col 67}= {res}    0.0000
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      7.22
+{txt}Log likelihood = {res}-55.193557{txt}{col 49}Prob > chi2{col 67}= {res}    0.0270
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}     1.69{col 49}{space 2}     0.28{col 60}{space 1}    6.04{col 69}{space 3} 0.00{col 77}{space 4}     1.14{col 90}{space 3}     2.24
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.97{col 49}{space 2}     0.37{col 60}{space 1}    2.63{col 69}{space 3} 0.01{col 77}{space 4}     0.25{col 90}{space 3}     1.70
 {txt}{space 35} {c |}
 {space 24}rec_vs_none {c |}
-{space 33}H  {c |}{col 37}{res}{space 2}    -2.31{col 49}{space 2}     0.28{col 60}{space 1}   -8.25{col 69}{space 3} 0.00{col 77}{space 4}    -2.86{col 90}{space 3}    -1.76
-{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.05{col 49}{space 2}     0.27{col 60}{space 1}   22.15{col 69}{space 3} 0.00{col 77}{space 4}     5.52{col 90}{space 3}     6.59
+{space 23}Recommended  {c |}{col 37}{res}{space 2}     1.31{col 49}{space 2}     1.19{col 60}{space 1}    1.11{col 69}{space 3} 0.27{col 77}{space 4}    -1.01{col 90}{space 3}     3.64
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     4.69{col 49}{space 2}     0.89{col 60}{space 1}    5.28{col 69}{space 3} 0.00{col 77}{space 4}     2.95{col 90}{space 3}     6.43
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}rec_vs_none                         {txt}{c |}
 {space 30}field {c |}
-{space 27}Welfare  {c |}{col 37}{res}{space 2}    -1.25{col 49}{space 2}     0.21{col 60}{space 1}   -6.12{col 69}{space 3} 0.00{col 77}{space 4}    -1.66{col 90}{space 3}    -0.85
-{txt}{space 35} {c |}
-{space 23}prespecified {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}    -1.45{col 49}{space 2}     0.32{col 60}{space 1}   -4.53{col 69}{space 3} 0.00{col 77}{space 4}    -2.08{col 90}{space 3}    -0.82
+{space 27}Welfare  {c |}{col 37}{res}{space 2}     0.90{col 49}{space 2}     0.48{col 60}{space 1}    1.89{col 69}{space 3} 0.06{col 77}{space 4}    -0.03{col 90}{space 3}     1.83
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}    -0.10{col 49}{space 2}     0.35{col 60}{space 1}   -0.28{col 69}{space 3} 0.78{col 77}{space 4}    -0.78{col 90}{space 3}     0.59
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}/rec_vs_none                        {txt}{c |}
-{space 31}cut1 {c |}{col 37}{res}{space 2}    -0.55{col 49}{space 2}     0.22{col 77}{space 4}    -0.99{col 90}{space 3}    -0.11
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.15{col 77}{space 4}     0.35{col 90}{space 3}     0.96
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.25{col 77}{space 4}     0.59{col 90}{space 3}     1.62
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     1.00{col 49}{space 2}        .{col 60}{space 1}       .{col 69}{space 3}    .{col 77}{space 4}        .{col 90}{space 3}        .
+{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.01{col 49}{space 2}     1.07{col 60}{space 1}    0.01{col 69}{space 3} 0.99{col 77}{space 4}    -0.97{col 90}{space 3}     0.97
 {txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 (option {bf:mean} assumed; average structural function mean)
 {res}{txt}(6 missing values generated)
@@ -452,7 +244,7 @@ Iteration 27:{space 2}log likelihood = {res:-45.152288}
 
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
-    __000001 {c |} {res}        30    0.97112      0.918    -0.177    0.57022
+    __000001 {c |} {res}        30    0.98137      0.592    -1.083    0.86060
 {hline}
 Analysis for: {ul:rec_vs_none} with respect to {ul:time}
 
@@ -460,99 +252,110 @@ Analysis for: {ul:rec_vs_none} with respect to {ul:time}
    {txt}analysis time _t:  {res}(completion-origin)/7
              {txt}origin:  {res}time commission
 
-{txt}Iteration 0:{space 3}EE criterion = {res: 6.679e-16}  
-Iteration 1:{space 3}EE criterion = {res: 7.891e-27}  
+{txt}Iteration 0:{space 3}EE criterion = {res:  120.1604}  
+Iteration 1:{space 3}EE criterion = {res: 61.060309}  
+Iteration 2:{space 3}EE criterion = {res: 11.632408}  
+Iteration 3:{space 3}EE criterion = {res: .55421372}  
+Iteration 4:{space 3}EE criterion = {res: .06729877}  
+Iteration 5:{space 3}EE criterion = {res: 6.402e-06}  
+Iteration 6:{space 3}EE criterion = {res: 4.318e-12}  
+Iteration 7:{space 3}EE criterion = {res: 1.936e-24}  
 {res}
-{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        33
+{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        32
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
 {txt:Outcome model}{col 16}:{res: Weibull}
 {txt:Treatment model}{col 16}:{res: logit}
 {txt:Censoring model}{col 16}:{res: none}
-{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 23}{c |}{col 35}    Robust
-{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
-{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}ATE                   {txt}{c |}
-{space 10}rec_vs_none {c |}
-{space 12}(H vs G)  {c |}{col 23}{res}{space 2}     3.22{col 35}{space 2}     8.16{col 46}{space 1}    0.40{col 55}{space 3} 0.69{col 63}{space 4}   -12.77{col 76}{space 3}    19.22
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}POmean                {txt}{c |}
-{space 10}rec_vs_none {c |}
-{space 19}G  {c |}{col 23}{res}{space 2}    30.89{col 35}{space 2}     4.13{col 46}{space 1}    7.48{col 55}{space 3} 0.00{col 63}{space 4}    22.79{col 76}{space 3}    38.98
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME1                  {txt}{c |}
-meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     0.53{col 35}{space 2}     0.28{col 46}{space 1}    1.88{col 55}{space 3} 0.06{col 63}{space 4}    -0.02{col 76}{space 3}     1.08
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.29{col 35}{space 2}     0.21{col 46}{space 1}   15.62{col 55}{space 3} 0.00{col 63}{space 4}     2.88{col 76}{space 3}     3.70
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME1_lnshape          {txt}{c |}
-{space 16}_cons {c |}{col 23}{res}{space 2}     0.57{col 35}{space 2}     0.18{col 46}{space 1}    3.11{col 55}{space 3} 0.00{col 63}{space 4}     0.21{col 76}{space 3}     0.92
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME2                  {txt}{c |}
-meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     1.69{col 35}{space 2}     0.23{col 46}{space 1}    7.48{col 55}{space 3} 0.00{col 63}{space 4}     1.25{col 76}{space 3}     2.13
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     2.59{col 35}{space 2}     0.10{col 46}{space 1}   26.38{col 55}{space 3} 0.00{col 63}{space 4}     2.40{col 76}{space 3}     2.78
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME2_lnshape          {txt}{c |}
-{space 16}_cons {c |}{col 23}{res}{space 2}     0.95{col 35}{space 2}     0.26{col 46}{space 1}    3.65{col 55}{space 3} 0.00{col 63}{space 4}     0.44{col 76}{space 3}     1.46
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}TME2                  {txt}{c |}
-{space 16}field {c |}
-{space 13}Welfare  {c |}{col 23}{res}{space 2}    -2.47{col 35}{space 2}     1.16{col 46}{space 1}   -2.13{col 55}{space 3} 0.03{col 63}{space 4}    -4.74{col 76}{space 3}    -0.20
-{txt}{space 21} {c |}
-{space 9}prespecified {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}    -2.91{col 35}{space 2}     1.20{col 46}{space 1}   -2.42{col 55}{space 3} 0.02{col 63}{space 4}    -5.26{col 76}{space 3}    -0.56
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     2.42{col 35}{space 2}     1.38{col 46}{space 1}    1.75{col 55}{space 3} 0.08{col 63}{space 4}    -0.29{col 76}{space 3}     5.12
-{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{txt}{hline 23}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 24}{c |}{col 36}    Robust
+{col 1}                    _t{col 24}{c |}      Coef.{col 36}   Std. Err.{col 48}      z{col 56}   P>|z|{col 64}     [95% Con{col 77}f. Interval]
+{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}ATE                    {txt}{c |}
+{space 11}rec_vs_none {c |}
+(Recommended vs None)  {c |}{col 24}{res}{space 2}    -3.02{col 36}{space 2}     9.65{col 47}{space 1}   -0.31{col 56}{space 3} 0.75{col 64}{space 4}   -21.93{col 77}{space 3}    15.90
+{txt}{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}POmean                 {txt}{c |}
+{space 11}rec_vs_none {c |}
+{space 17}None  {c |}{col 24}{res}{space 2}    36.34{col 36}{space 2}     7.68{col 47}{space 1}    4.73{col 56}{space 3} 0.00{col 64}{space 4}    21.28{col 77}{space 3}    51.40
+{txt}{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME0                   {txt}{c |}
+{space 1}meta_analysis_planned {c |}
+{space 18}Yes  {c |}{col 24}{res}{space 2}     1.71{col 36}{space 2}     0.19{col 47}{space 1}    8.88{col 56}{space 3} 0.00{col 64}{space 4}     1.33{col 77}{space 3}     2.09
+{txt}{space 17}_cons {c |}{col 24}{res}{space 2}     2.61{col 36}{space 2}     0.10{col 47}{space 1}   26.56{col 56}{space 3} 0.00{col 64}{space 4}     2.42{col 77}{space 3}     2.80
+{txt}{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME0_lnshape           {txt}{c |}
+{space 17}_cons {c |}{col 24}{res}{space 2}     1.14{col 36}{space 2}     0.25{col 47}{space 1}    4.60{col 56}{space 3} 0.00{col 64}{space 4}     0.65{col 77}{space 3}     1.62
+{txt}{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1                   {txt}{c |}
+{space 1}meta_analysis_planned {c |}
+{space 18}Yes  {c |}{col 24}{res}{space 2}     0.44{col 36}{space 2}     0.39{col 47}{space 1}    1.14{col 56}{space 3} 0.26{col 64}{space 4}    -0.32{col 77}{space 3}     1.21
+{txt}{space 17}_cons {c |}{col 24}{res}{space 2}     3.39{col 36}{space 2}     0.22{col 47}{space 1}   15.70{col 56}{space 3} 0.00{col 64}{space 4}     2.97{col 77}{space 3}     3.81
+{txt}{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1_lnshape           {txt}{c |}
+{space 17}_cons {c |}{col 24}{res}{space 2}     0.40{col 36}{space 2}     0.16{col 47}{space 1}    2.40{col 56}{space 3} 0.02{col 64}{space 4}     0.07{col 77}{space 3}     0.72
+{txt}{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}TME1                   {txt}{c |}
+{space 17}field {c |}
+{space 14}Welfare  {c |}{col 24}{res}{space 2}     1.54{col 36}{space 2}     0.78{col 47}{space 1}    1.97{col 56}{space 3} 0.05{col 64}{space 4}     0.01{col 77}{space 3}     3.08
+{txt}{space 22} {c |}
+{space 10}prespecified {c |}
+{space 18}Yes  {c |}{col 24}{res}{space 2}     0.00{col 36}{txt}  (omitted)
+{space 17}_cons {c |}{col 24}{res}{space 2}    -0.29{col 36}{space 2}     0.54{col 47}{space 1}   -0.53{col 56}{space 3} 0.59{col 64}{space 4}    -1.35{col 77}{space 3}     0.77
+{txt}{hline 23}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {hline}
 {res}Analysis for: {ul:rec_vs_nonrec} with respect to {ul:resource}
 
-{txt}Fitting constant-only model:
+{txt}Iteration 0:{space 3}log likelihood = {res:-45.294405}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-43.745161}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-43.224654}  (not concave)
+Iteration 3:{space 3}log likelihood = {res:-43.122452}  (not concave)
+Iteration 4:{space 3}log likelihood = {res:-43.071866}  (not concave)
+Iteration 5:{space 3}log likelihood = {res:-42.965075}  
+Iteration 6:{space 3}log likelihood = {res:-42.579615}  
+Iteration 7:{space 3}log likelihood = {res:-42.254791}  
+Iteration 8:{space 3}log likelihood = {res:-42.193133}  
+Iteration 9:{space 3}log likelihood = {res:-42.160625}  
+Iteration 10:{space 2}log likelihood = {res:-42.156699}  
+Iteration 11:{space 2}log likelihood = {res:-42.156242}  
+Iteration 12:{space 2}log likelihood = {res:-42.156242}  
 {res}
-{txt}Iteration 0:{space 3}log likelihood = {res:-29.748603}  
-Iteration 1:{space 3}log likelihood = {res:-29.582194}  
-Iteration 2:{space 3}log likelihood = {res:-29.582064}  
-Iteration 3:{space 3}log likelihood = {res:-29.582064}  
-{res}
-{txt}Fitting full model:
-{res}
-{txt}Iteration 0:{space 3}log likelihood = {res:-28.049617}  
-Iteration 1:{space 3}log likelihood = {res:-27.958835}  
-Iteration 2:{space 3}log likelihood = {res:-27.958832}  
-Iteration 3:{space 3}log likelihood = {res:-27.958832}  
-{res}
-{txt}Interval regression{col 49}Number of obs{col 67}= {res}        27
+{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        27
 {txt}{col 49}   Uncensored{col 67}= {res}        24
 {txt}{col 49}   Left-censored{col 67}= {res}         0
 {txt}{col 49}   Right-censored{col 67}= {res}         3
 {txt}{col 49}   Interval-cens.{col 67}= {res}         0
 
-{txt}{col 49}LR chi2({res}2{txt}){col 67}= {res}      3.25
-{txt}Log likelihood = {res}-27.958832{txt}{col 49}Prob > chi2{col 67}= {res}    0.1973
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      1.93
+{txt}Log likelihood = {res}-42.156242{txt}{col 49}Prob > chi2{col 67}= {res}    0.3813
 
-{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
-{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 8}rec_vs_nonrec {c |}
-{space 19}K  {c |}{col 23}{res}{space 2}     0.40{col 35}{space 2}     0.33{col 46}{space 1}    1.22{col 55}{space 3} 0.22{col 63}{space 4}    -0.24{col 76}{space 3}     1.05
-{txt}{space 21} {c |}
-meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     0.33{col 35}{space 2}     0.27{col 46}{space 1}    1.21{col 55}{space 3} 0.23{col 63}{space 4}    -0.20{col 76}{space 3}     0.86
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     6.31{col 35}{space 2}     0.20{col 46}{space 1}   31.63{col 55}{space 3} 0.00{col 63}{space 4}     5.91{col 76}{space 3}     6.70
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-             /lnsigma {c |}{col 23}{res}{space 2}    -0.38{col 35}{space 2}     0.15{col 46}{space 1}   -2.55{col 55}{space 3} 0.01{col 63}{space 4}    -0.66{col 76}{space 3}    -0.09
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-                sigma {c |}{col 23}{res}{space 2}     0.69{col 35}{space 2}     0.10{col 63}{space 4}     0.51{col 76}{space 3}     0.92
-{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-(option {bf:xb} assumed; fitted values)
-(12 missing values generated)
-(15 missing values generated)
+{txt}{hline 38}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 39}{c |}      Coef.{col 51}   Std. Err.{col 63}      z{col 71}   P>|z|{col 79}     [95% Con{col 92}f. Interval]
+{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}meta_analysis_planned {c |}
+{space 33}Yes  {c |}{col 39}{res}{space 2}     0.32{col 51}{space 2}     0.28{col 62}{space 1}    1.11{col 71}{space 3} 0.27{col 79}{space 4}    -0.24{col 92}{space 3}     0.87
+{txt}{space 37} {c |}
+{space 24}rec_vs_nonrec {c |}
+{space 25}Recommended  {c |}{col 39}{res}{space 2}    -0.69{col 51}{space 2}     1.56{col 62}{space 1}   -0.44{col 71}{space 3} 0.66{col 79}{space 4}    -3.76{col 92}{space 3}     2.37
+{txt}{space 32}_cons {c |}{col 39}{res}{space 2}     6.94{col 51}{space 2}     1.28{col 62}{space 1}    5.42{col 71}{space 3} 0.00{col 79}{space 4}     4.43{col 92}{space 3}     9.45
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_nonrec                         {txt}{c |}
+{space 25}prespecified {c |}
+{space 33}Yes  {c |}{col 39}{res}{space 2}    -0.26{col 51}{space 2}     0.56{col 62}{space 1}   -0.47{col 71}{space 3} 0.64{col 79}{space 4}    -1.37{col 92}{space 3}     0.84
+{txt}{space 32}_cons {c |}{col 39}{res}{space 2}     0.92{col 51}{space 2}     0.44{col 62}{space 1}    2.11{col 71}{space 3} 0.03{col 79}{space 4}     0.07{col 92}{space 3}     1.78
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 18}var(e.log_resource1){c |}{col 39}{res}{space 2}     0.49{col 51}{space 2}     0.21{col 79}{space 4}     0.21{col 92}{space 3}     1.15
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_nonrec,e.log_resource1){c |}{col 39}{res}{space 2}     0.24{col 51}{space 2}     1.24{col 62}{space 1}    0.20{col 71}{space 3} 0.84{col 79}{space 4}    -0.98{col 92}{space 3}     0.99
+{txt}{hline 38}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+(option {bf:mean} assumed; average structural function mean)
+{res}{txt}(12 missing values generated)
+{res}{txt}(15 missing values generated)
 
                    Shapiro-Wilk W test for normal data
 
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
-    __000003 {c |} {res}        24    0.96018      1.074     0.146    0.44214
+    __000003 {c |} {res}        24    0.96123      1.046     0.091    0.46365
 {hline}
 Analysis for: {ul:rec_vs_nonrec} with respect to {ul:time}
 
@@ -560,60 +363,61 @@ Analysis for: {ul:rec_vs_nonrec} with respect to {ul:time}
    {txt}analysis time _t:  {res}(completion-origin)/7
              {txt}origin:  {res}time commission
 
-{txt}Iteration 0:{space 3}EE criterion = {res: 2.696e-15}  
-Iteration 1:{space 3}EE criterion = {res: 7.107e-27}  
+{txt}Iteration 0:{space 3}EE criterion = {res: 1.532e-14}  
+Iteration 1:{space 3}EE criterion = {res: 5.342e-27}  
 {res}
-{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        27
+{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        26
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
 {txt:Outcome model}{col 16}:{res: Weibull}
 {txt:Treatment model}{col 16}:{res: logit}
 {txt:Censoring model}{col 16}:{res: none}
-{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 23}{c |}{col 35}    Robust
-{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
-{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}ATE                   {txt}{c |}
-{space 8}rec_vs_nonrec {c |}
-{space 12}(K vs J)  {c |}{col 23}{res}{space 2}    -3.93{col 35}{space 2}     8.06{col 46}{space 1}   -0.49{col 55}{space 3} 0.63{col 63}{space 4}   -19.73{col 76}{space 3}    11.87
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}POmean                {txt}{c |}
-{space 8}rec_vs_nonrec {c |}
-{space 19}J  {c |}{col 23}{res}{space 2}    34.36{col 35}{space 2}     7.36{col 46}{space 1}    4.67{col 55}{space 3} 0.00{col 63}{space 4}    19.94{col 76}{space 3}    48.78
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME1                  {txt}{c |}
-meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     0.46{col 35}{space 2}     0.38{col 46}{space 1}    1.21{col 55}{space 3} 0.23{col 63}{space 4}    -0.28{col 76}{space 3}     1.20
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.38{col 35}{space 2}     0.20{col 46}{space 1}   17.27{col 55}{space 3} 0.00{col 63}{space 4}     3.00{col 76}{space 3}     3.76
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME1_lnshape          {txt}{c |}
-{space 16}_cons {c |}{col 23}{res}{space 2}     0.42{col 35}{space 2}     0.16{col 46}{space 1}    2.69{col 55}{space 3} 0.01{col 63}{space 4}     0.11{col 76}{space 3}     0.72
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME2                  {txt}{c |}
-meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     0.39{col 35}{space 2}     0.29{col 46}{space 1}    1.31{col 55}{space 3} 0.19{col 63}{space 4}    -0.19{col 76}{space 3}     0.96
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.32{col 35}{space 2}     0.21{col 46}{space 1}   15.74{col 55}{space 3} 0.00{col 63}{space 4}     2.90{col 76}{space 3}     3.73
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME2_lnshape          {txt}{c |}
-{space 16}_cons {c |}{col 23}{res}{space 2}     0.66{col 35}{space 2}     0.09{col 46}{space 1}    7.22{col 55}{space 3} 0.00{col 63}{space 4}     0.48{col 76}{space 3}     0.84
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}TME2                  {txt}{c |}
-{space 16}field {c |}
-{space 13}Welfare  {c |}{col 23}{res}{space 2}    -2.53{col 35}{space 2}     1.19{col 46}{space 1}   -2.12{col 55}{space 3} 0.03{col 63}{space 4}    -4.87{col 76}{space 3}    -0.19
-{txt}{space 21} {c |}
-{space 9}prespecified {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     0.18{col 35}{space 2}     1.27{col 46}{space 1}    0.14{col 55}{space 3} 0.89{col 63}{space 4}    -2.30{col 76}{space 3}     2.66
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}    -0.33{col 35}{space 2}     1.22{col 46}{space 1}   -0.27{col 55}{space 3} 0.79{col 63}{space 4}    -2.71{col 76}{space 3}     2.05
-{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{txt}{hline 34}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 35}{c |}{col 47}    Robust
+{col 1}                               _t{col 35}{c |}      Coef.{col 47}   Std. Err.{col 59}      z{col 67}   P>|z|{col 75}     [95% Con{col 88}f. Interval]
+{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}ATE                               {txt}{c |}
+{space 20}rec_vs_nonrec {c |}
+(Recommended vs Non-recommended)  {c |}{col 35}{res}{space 2}     3.83{col 47}{space 2}     8.79{col 58}{space 1}    0.44{col 67}{space 3} 0.66{col 75}{space 4}   -13.39{col 88}{space 3}    21.06
+{txt}{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}POmean                            {txt}{c |}
+{space 20}rec_vs_nonrec {c |}
+{space 17}Non-recommended  {c |}{col 35}{res}{space 2}    30.87{col 47}{space 2}     5.66{col 58}{space 1}    5.45{col 67}{space 3} 0.00{col 75}{space 4}    19.77{col 88}{space 3}    41.97
+{txt}{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME0                              {txt}{c |}
+{space 12}meta_analysis_planned {c |}
+{space 29}Yes  {c |}{col 35}{res}{space 2}     0.37{col 47}{space 2}     0.34{col 58}{space 1}    1.09{col 67}{space 3} 0.28{col 75}{space 4}    -0.29{col 88}{space 3}     1.03
+{txt}{space 28}_cons {c |}{col 35}{res}{space 2}     3.33{col 47}{space 2}     0.25{col 58}{space 1}   13.23{col 67}{space 3} 0.00{col 75}{space 4}     2.84{col 88}{space 3}     3.83
+{txt}{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME0_lnshape                      {txt}{c |}
+{space 28}_cons {c |}{col 35}{res}{space 2}     0.66{col 47}{space 2}     0.10{col 58}{space 1}    6.87{col 67}{space 3} 0.00{col 75}{space 4}     0.47{col 88}{space 3}     0.85
+{txt}{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1                              {txt}{c |}
+{space 12}meta_analysis_planned {c |}
+{space 29}Yes  {c |}{col 35}{res}{space 2}     0.44{col 47}{space 2}     0.38{col 58}{space 1}    1.15{col 67}{space 3} 0.25{col 75}{space 4}    -0.31{col 88}{space 3}     1.19
+{txt}{space 28}_cons {c |}{col 35}{res}{space 2}     3.39{col 47}{space 2}     0.22{col 58}{space 1}   15.70{col 67}{space 3} 0.00{col 75}{space 4}     2.97{col 88}{space 3}     3.81
+{txt}{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME1_lnshape                      {txt}{c |}
+{space 28}_cons {c |}{col 35}{res}{space 2}     0.40{col 47}{space 2}     0.16{col 58}{space 1}    2.50{col 67}{space 3} 0.01{col 75}{space 4}     0.09{col 88}{space 3}     0.72
+{txt}{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}TME1                              {txt}{c |}
+{space 28}field {c |}
+{space 25}Welfare  {c |}{col 35}{res}{space 2}     2.49{col 47}{space 2}     1.40{col 58}{space 1}    1.78{col 67}{space 3} 0.07{col 75}{space 4}    -0.25{col 88}{space 3}     5.24
+{txt}{space 33} {c |}
+{space 21}prespecified {c |}
+{space 29}Yes  {c |}{col 35}{res}{space 2}     0.13{col 47}{space 2}     1.19{col 58}{space 1}    0.11{col 67}{space 3} 0.91{col 75}{space 4}    -2.20{col 88}{space 3}     2.46
+{txt}{space 28}_cons {c |}{col 35}{res}{space 2}     0.09{col 47}{space 2}     1.06{col 58}{space 1}    0.08{col 67}{space 3} 0.94{col 75}{space 4}    -2.00{col 88}{space 3}     2.17
+{txt}{hline 34}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {hline}
 {res}Analysis for: {ul:any_vs_none} with respect to {ul:resource}
 
-{txt}Iteration 0:{space 3}log likelihood = {res:-59.556087}  (not concave)
-Iteration 1:{space 3}log likelihood = {res: -57.25329}  
-Iteration 2:{space 3}log likelihood = {res:-56.036343}  
-Iteration 3:{space 3}log likelihood = {res:-55.802492}  
-Iteration 4:{space 3}log likelihood = {res:-55.799069}  
-Iteration 5:{space 3}log likelihood = {res:-55.799063}  
-Iteration 6:{space 3}log likelihood = {res:-55.799063}  
+{txt}Iteration 0:{space 3}log likelihood = {res:-66.568371}  (not concave)
+Iteration 1:{space 3}log likelihood = {res:-65.528145}  (not concave)
+Iteration 2:{space 3}log likelihood = {res:-65.469714}  
+Iteration 3:{space 3}log likelihood = {res:-65.102147}  
+Iteration 4:{space 3}log likelihood = {res:-64.985316}  
+Iteration 5:{space 3}log likelihood = {res: -64.98295}  
+Iteration 6:{space 3}log likelihood = {res:-64.982942}  
+Iteration 7:{space 3}log likelihood = {res:-64.982942}  
 {res}
 {txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        38
 {txt}{col 49}   Uncensored{col 67}= {res}        35
@@ -621,32 +425,27 @@ Iteration 6:{space 3}log likelihood = {res:-55.799063}
 {txt}{col 49}   Right-censored{col 67}= {res}         3
 {txt}{col 49}   Interval-cens.{col 67}= {res}         0
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     32.82
-{txt}Log likelihood = {res}-55.799063{txt}{col 49}Prob > chi2{col 67}= {res}    0.0000
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     10.37
+{txt}Log likelihood = {res}-64.982942{txt}{col 49}Prob > chi2{col 67}= {res}    0.0056
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}     0.90{col 49}{space 2}     0.33{col 60}{space 1}    2.73{col 69}{space 3} 0.01{col 77}{space 4}     0.25{col 90}{space 3}     1.55
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.99{col 49}{space 2}     0.31{col 60}{space 1}    3.17{col 69}{space 3} 0.00{col 77}{space 4}     0.38{col 90}{space 3}     1.61
 {txt}{space 35} {c |}
 {space 24}any_vs_none {c |}
-{space 33}R  {c |}{col 37}{res}{space 2}    -2.49{col 49}{space 2}     0.44{col 60}{space 1}   -5.71{col 69}{space 3} 0.00{col 77}{space 4}    -3.34{col 90}{space 3}    -1.63
-{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.42{col 49}{space 2}     0.20{col 60}{space 1}   31.71{col 69}{space 3} 0.00{col 77}{space 4}     6.03{col 90}{space 3}     6.82
+{space 31}Any  {c |}{col 37}{res}{space 2}    -0.43{col 49}{space 2}     0.55{col 60}{space 1}   -0.77{col 69}{space 3} 0.44{col 77}{space 4}    -1.52{col 90}{space 3}     0.66
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     5.97{col 49}{space 2}     0.41{col 60}{space 1}   14.42{col 69}{space 3} 0.00{col 77}{space 4}     5.16{col 90}{space 3}     6.79
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}any_vs_none                         {txt}{c |}
 {space 30}field {c |}
-{space 27}Welfare  {c |}{col 37}{res}{space 2}    -0.46{col 49}{space 2}     0.44{col 60}{space 1}   -1.04{col 69}{space 3} 0.30{col 77}{space 4}    -1.32{col 90}{space 3}     0.40
-{txt}{space 35} {c |}
-{space 23}prespecified {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}    -1.92{col 49}{space 2}     0.41{col 60}{space 1}   -4.66{col 69}{space 3} 0.00{col 77}{space 4}    -2.73{col 90}{space 3}    -1.11
+{space 27}Welfare  {c |}{col 37}{res}{space 2}     0.59{col 49}{space 2}     0.31{col 60}{space 1}    1.89{col 69}{space 3} 0.06{col 77}{space 4}    -0.02{col 90}{space 3}     1.20
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     0.28{col 49}{space 2}     0.25{col 60}{space 1}    1.13{col 69}{space 3} 0.26{col 77}{space 4}    -0.21{col 90}{space 3}     0.76
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}/any_vs_none                        {txt}{c |}
-{space 31}cut1 {c |}{col 37}{res}{space 2}    -0.44{col 49}{space 2}     0.30{col 77}{space 4}    -1.03{col 90}{space 3}     0.15
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     1.34{col 49}{space 2}     0.55{col 77}{space 4}     0.61{col 90}{space 3}     2.98
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.86{col 49}{space 2}     0.31{col 77}{space 4}     0.42{col 90}{space 3}     1.73
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 1}corr(e.any_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.94{col 49}{space 2}     0.11{col 60}{space 1}    8.78{col 69}{space 3} 0.00{col 77}{space 4}    -0.11{col 90}{space 3}     1.00
+{space 1}corr(e.any_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.95{col 49}{space 2}     0.08{col 60}{space 1}   12.47{col 69}{space 3} 0.00{col 77}{space 4}     0.25{col 90}{space 3}     1.00
 {txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 (option {bf:mean} assumed; average structural function mean)
 {res}{txt}(4 missing values generated)
@@ -655,7 +454,7 @@ Iteration 6:{space 3}log likelihood = {res:-55.799063}
 
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
-    __000005 {c |} {res}        35    0.98620      0.493    -1.478    0.93023
+    __000005 {c |} {res}        35    0.98845      0.412    -1.850    0.96787
 {hline}
 Analysis for: {ul:any_vs_none} with respect to {ul:time}
 
@@ -663,10 +462,15 @@ Analysis for: {ul:any_vs_none} with respect to {ul:time}
    {txt}analysis time _t:  {res}(completion-origin)/7
              {txt}origin:  {res}time commission
 
-{txt}Iteration 0:{space 3}EE criterion = {res: 2.878e-16}  
-Iteration 1:{space 3}EE criterion = {res: 3.890e-28}  
+{txt}Iteration 0:{space 3}EE criterion = {res: 19.503406}  
+Iteration 1:{space 3}EE criterion = {res: 3.0309072}  
+Iteration 2:{space 3}EE criterion = {res: 1.4895084}  
+Iteration 3:{space 3}EE criterion = {res: .07823929}  
+Iteration 4:{space 3}EE criterion = {res: .00005116}  
+Iteration 5:{space 3}EE criterion = {res: 1.580e-09}  
+Iteration 6:{space 3}EE criterion = {res: 2.081e-19}  
 {res}
-{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        39
+{txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        38
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
 {txt:Outcome model}{col 16}:{res: Weibull}
 {txt:Treatment model}{col 16}:{res: logit}
@@ -677,35 +481,35 @@ Iteration 1:{space 3}EE criterion = {res: 3.890e-28}
 {hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                   {txt}{c |}
 {space 10}any_vs_none {c |}
-{space 12}(R vs Q)  {c |}{col 23}{res}{space 2}     3.28{col 35}{space 2}     8.71{col 46}{space 1}    0.38{col 55}{space 3} 0.71{col 63}{space 4}   -13.79{col 76}{space 3}    20.36
+{space 7}(Any vs None)  {c |}{col 23}{res}{space 2}    -2.48{col 35}{space 2}     9.15{col 46}{space 1}   -0.27{col 55}{space 3} 0.79{col 63}{space 4}   -20.41{col 76}{space 3}    15.45
 {txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}POmean                {txt}{c |}
 {space 10}any_vs_none {c |}
-{space 19}Q  {c |}{col 23}{res}{space 2}    32.36{col 35}{space 2}     4.53{col 46}{space 1}    7.14{col 55}{space 3} 0.00{col 63}{space 4}    23.48{col 76}{space 3}    41.23
+{space 16}None  {c |}{col 23}{res}{space 2}    37.97{col 35}{space 2}     7.98{col 46}{space 1}    4.76{col 55}{space 3} 0.00{col 63}{space 4}    22.34{col 76}{space 3}    53.60
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME0                  {txt}{c |}
+meta_analysis_planned {c |}
+{space 17}Yes  {c |}{col 23}{res}{space 2}     1.71{col 35}{space 2}     0.20{col 46}{space 1}    8.60{col 55}{space 3} 0.00{col 63}{space 4}     1.32{col 76}{space 3}     2.10
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     2.61{col 35}{space 2}     0.10{col 46}{space 1}   26.73{col 55}{space 3} 0.00{col 63}{space 4}     2.41{col 76}{space 3}     2.80
+{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}OME0_lnshape          {txt}{c |}
+{space 16}_cons {c |}{col 23}{res}{space 2}     1.10{col 35}{space 2}     0.24{col 46}{space 1}    4.50{col 55}{space 3} 0.00{col 63}{space 4}     0.62{col 76}{space 3}     1.58
 {txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}OME1                  {txt}{c |}
 meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     0.67{col 35}{space 2}     0.26{col 46}{space 1}    2.60{col 55}{space 3} 0.01{col 63}{space 4}     0.17{col 76}{space 3}     1.18
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.22{col 35}{space 2}     0.17{col 46}{space 1}   19.22{col 55}{space 3} 0.00{col 63}{space 4}     2.89{col 76}{space 3}     3.55
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.55{col 35}{space 2}     0.29{col 46}{space 1}    1.89{col 55}{space 3} 0.06{col 63}{space 4}    -0.02{col 76}{space 3}     1.11
+{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     3.38{col 35}{space 2}     0.17{col 46}{space 1}   19.35{col 55}{space 3} 0.00{col 63}{space 4}     3.04{col 76}{space 3}     3.73
 {txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}OME1_lnshape          {txt}{c |}
-{space 16}_cons {c |}{col 23}{res}{space 2}     0.52{col 35}{space 2}     0.11{col 46}{space 1}    4.80{col 55}{space 3} 0.00{col 63}{space 4}     0.31{col 76}{space 3}     0.73
+{space 16}_cons {c |}{col 23}{res}{space 2}     0.47{col 35}{space 2}     0.12{col 46}{space 1}    4.04{col 55}{space 3} 0.00{col 63}{space 4}     0.24{col 76}{space 3}     0.69
 {txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME2                  {txt}{c |}
-meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     1.69{col 35}{space 2}     0.24{col 46}{space 1}    7.16{col 55}{space 3} 0.00{col 63}{space 4}     1.22{col 76}{space 3}     2.15
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     2.59{col 35}{space 2}     0.10{col 46}{space 1}   26.22{col 55}{space 3} 0.00{col 63}{space 4}     2.39{col 76}{space 3}     2.78
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}OME2_lnshape          {txt}{c |}
-{space 16}_cons {c |}{col 23}{res}{space 2}     0.89{col 35}{space 2}     0.27{col 46}{space 1}    3.34{col 55}{space 3} 0.00{col 63}{space 4}     0.37{col 76}{space 3}     1.42
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}TME2                  {txt}{c |}
+{res}TME1                  {txt}{c |}
 {space 16}field {c |}
-{space 13}Welfare  {c |}{col 23}{res}{space 2}    -1.58{col 35}{space 2}     0.85{col 46}{space 1}   -1.87{col 55}{space 3} 0.06{col 63}{space 4}    -3.24{col 76}{space 3}     0.08
+{space 13}Welfare  {c |}{col 23}{res}{space 2}     1.00{col 35}{space 2}     0.73{col 46}{space 1}    1.37{col 55}{space 3} 0.17{col 63}{space 4}    -0.43{col 76}{space 3}     2.43
 {txt}{space 21} {c |}
 {space 9}prespecified {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}    -2.53{col 35}{space 2}     0.89{col 46}{space 1}   -2.84{col 55}{space 3} 0.00{col 63}{space 4}    -4.27{col 76}{space 3}    -0.78
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     1.40{col 35}{space 2}     0.93{col 46}{space 1}    1.50{col 55}{space 3} 0.13{col 63}{space 4}    -0.42{col 76}{space 3}     3.23
+{space 17}Yes  {c |}{col 23}{res}{space 2}     0.00{col 35}{txt}  (omitted)
+{space 16}_cons {c |}{col 23}{res}{space 2}     0.32{col 35}{space 2}     0.46{col 46}{space 1}    0.69{col 55}{space 3} 0.49{col 63}{space 4}    -0.59{col 76}{space 3}     1.23
 {txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 
 {com}. 
@@ -723,11 +527,11 @@ meta_analysis_planned {c |}
 . // Specify options for the KM plots.
 . local opts        ci ci1opts(fcolor(navy%20)) ci2opts(fcolor(maroon%20)) // Translucent CI bands.
 {txt}
+{com}. local opts `opts' legend(ring(0) position(5)) // Position of the legend.
+{txt}
+{com}. local opts `opts' legend(order(5 6)) // legend keys to show (i.e., do not show boxes for CI bands in legend).
+{txt}
 {com}. local opts `opts' risktable(, title("Incomplete Reviews"))               // Title.
-{txt}
-{com}. local opts `opts' risktable(, rowtitle("Blinded 1") group(1))            // TODO: Specify the rowtitle after unblinding.
-{txt}
-{com}. local opts `opts' risktable(, rowtitle("Blinded 2") group(2))            // TODO: Specify the rowtitle after unblinding.
 {txt}
 {com}. local opts `opts' censored(number)                                       // Indicate number of censorings.
 {txt}
@@ -743,35 +547,66 @@ meta_analysis_planned {c |}
 {txt}  2{com}.   // Get the name of the comparison for the filename and figure title.
 .   local comparison_name : variable label `comparison'
 {txt}  3{com}. 
+.   // Specify the risk table row titles.
+.   levelsof `comparison'
+{txt}  4{com}.   assert r(r) == 2
+{txt}  5{com}.   local levels `r(levels)'
+{txt}  6{com}.   local risktable ""
+{txt}  7{com}.   local legend ""
+{txt}  8{com}.   forvalues i = 1/2 {c -(}
+{txt}  9{com}.     local this_level : word `i' of `levels'
+{txt} 10{com}.     local rowtitle : label (`comparison') `this_level'
+{txt} 11{com}.     local risktable `risktable' risktable(, rowtitle("`rowtitle'") group(`this_level'))
+{txt} 12{com}.     local legend `legend' legend(label(`=4+`i'' "`rowtitle'")) // Use custom labels for the legend.
+{txt} 13{com}.   {c )-}
+{txt} 14{com}. 
 .   // Make the figure.
-.   sts graph , failure by(`comparison') `opts' title("")
-{txt}  4{com}.   
+.   sts graph , failure by(`comparison') `opts' `risktable' `legend' title("")
+{txt} 15{com}.   
 .   // Save the figure in the required formats.
-.   foreach format in png pdf {c -(} // TODO: Add TIFF with compression via sips.
-{txt}  5{com}.     local width ""
-{txt}  6{com}.     if "`format'" == "png" local width width(3000)
-{txt}  7{com}.     local filename "products/Time-to-completion for `comparison_name'.`format'"
-{txt}  8{com}.     graph export "`filename'" , `width' replace
-{txt}  9{com}.   {c )-}
-{txt} 10{com}. {c )-}
+.   foreach format in png pdf tif {c -(}
+{txt} 16{com}.     local width ""
+{txt} 17{com}.     if "`format'" == "png" local width width(3000)
+{txt} 18{com}.     local filename "products/Time-to-completion for `comparison_name'.`format'"
+{txt} 19{com}.     graph export "`filename'" , `width' replace
+{txt} 20{com}.     if "`format'" == "tif" {c -(}
+{txt} 21{com}.       !sips -s formatOptions lzw "`filename'" // Use sips to LZW-compress the file.
+{txt} 22{com}.     {c )-}
+{txt} 23{com}.   {c )-}
+{txt} 24{com}. {c )-}
+{res}{txt}0 1
 
-         {txt}failure _d:  {res}completed
+         failure _d:  {res}completed
    {txt}analysis time _t:  {res}(completion-origin)/7
              {txt}origin:  {res}time commission
 {txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.png written in PNG format)
 (file products/Time-to-completion for Recommended vs No ML Use.pdf written in PDF format)
+(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif written in TIFF format)
+
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif
+  /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif
+{res}{txt}0 1
 
          failure _d:  {res}completed
    {txt}analysis time _t:  {res}(completion-origin)/7
              {txt}origin:  {res}time commission
 {txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.png written in PNG format)
 (file products/Time-to-completion for Recommended vs Non-recommended ML Use.pdf written in PDF format)
+(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif written in TIFF format)
+
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif
+  /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif
+{res}{txt}0 1
 
          failure _d:  {res}completed
    {txt}analysis time _t:  {res}(completion-origin)/7
              {txt}origin:  {res}time commission
 {txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.png written in PNG format)
 (file products/Time-to-completion for Any vs No ML Use.pdf written in PDF format)
+(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif written in TIFF format)
+
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif
+  /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif
 
 {com}. 
 . set graphics on
@@ -864,87 +699,196 @@ meta_analysis_planned {c |}
 {com}. putdocx text ("Results")
 {res}{txt}
 {com}. 
+. // Insert the table of sample characteristics.
+. sample_characteristics
+{res}  39
+  12
+  21
+  6
+  21
+  12
+  27
+  39
+  12
+  19
+  5
+  19
+  12
+  24
+  39
+  3
+  2
+  2
+  2
+  3
+  4
+  39
+  9
+  19
+  4
+  19
+  9
+  23
+  39
+  11
+  19
+  6
+  19
+  11
+  25
+  39
+  4
+  10
+  4
+  10
+  4
+  14
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+  39
+  0
+  19
+  6
+  19
+  0
+  25
+  39
+  0
+  9
+  3
+  9
+  0
+  12
+  39
+  0
+  6
+  2
+  6
+  0
+  8
+  39
+  0
+  5
+  0
+  5
+  0
+  5
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+  39
+  0
+  1
+  0
+  1
+  0
+  1
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+  39
+  0
+  0
+  0
+  0
+  0
+  0
+{txt}
+{com}. 
 . // Insert the table of results.
 . results_table
-{res}{txt}1 2
-  {res}21
-
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
-{hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
-  12
+{res}{txt}0 1
+  {res}12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
-{txt}(results {stata estimates replay rec_vs_none_resource:rec_vs_none_resource} are active now)
-
-{p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]2.rec_vs_none = 0{p_end}
-
-{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
-{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 9}(1) {c |}{col 14}{res}{space 2}     0.10{col 26}{space 2}     0.03{col 37}{space 1}   -8.25{col 46}{space 3} 0.00{col 54}{space 4}     0.06{col 67}{space 3}     0.17
-{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}1 2
-  {res}21
+  21
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
-  6
+{txt}(results {stata estimates replay rec_vs_none_resource:rec_vs_none_resource} are active now)
+
+{p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.rec_vs_none = 0{p_end}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 9}(1) {c |}{col 14}{res}{space 2}     3.71{col 26}{space 2}     4.40{col 37}{space 1}    1.11{col 46}{space 3} 0.27{col 54}{space 4}     0.36{col 67}{space 3}    37.95
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}0 1
+  {res}6
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}          5    6.789035    .8300506   5.828946   7.728416
+  21
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
 {txt}(results {stata estimates replay rec_vs_nonrec_resource:rec_vs_nonrec_resource} are active now)
 
-{p 0 7}{space 1}{text:( 1)}{space 1} {res}[model]2.rec_vs_nonrec = 0{p_end}
+{p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.rec_vs_nonrec = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 9}(1) {c |}{col 14}{res}{space 2}     1.49{col 26}{space 2}     0.49{col 37}{space 1}    1.22{col 46}{space 3} 0.22{col 54}{space 4}     0.78{col 67}{space 3}     2.85
+{space 9}(1) {c |}{col 14}{res}{space 2}     0.50{col 26}{space 2}     0.78{col 37}{space 1}   -0.44{col 46}{space 3} 0.66{col 54}{space 4}     0.02{col 67}{space 3}    10.74
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}1 2
-  {res}27
-
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
-{hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
-  12
+{res}{txt}0 1
+  {res}12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
+  27
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {txt}(results {stata estimates replay any_vs_none_resource:any_vs_none_resource} are active now)
 
-{p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]2.any_vs_none = 0{p_end}
+{p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.any_vs_none = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 9}(1) {c |}{col 14}{res}{space 2}     0.08{col 26}{space 2}     0.04{col 37}{space 1}   -5.71{col 46}{space 3} 0.00{col 54}{space 4}     0.04{col 67}{space 3}     0.20
+{space 9}(1) {c |}{col 14}{res}{space 2}     0.65{col 26}{space 2}     0.36{col 37}{space 1}   -0.77{col 46}{space 3} 0.44{col 54}{space 4}     0.22{col 67}{space 3}     1.93
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}1 2
-  {res}21
-
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
-{hline 13}{c +}{hline 57}
-{space 10}_t {c |}{res}         19    27.43609    15.02005   7.142857         60
-  12
+{res}{txt}0 1
+  {res}12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         12     28.2381     31.0725   4.857143   101.8571
+  21
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 10}_t {c |}{res}         18     27.5873    15.44062   7.142857         60
 {txt}(results {stata estimates replay rec_vs_none_time:rec_vs_none_time} are active now)
 
-       _nl_1:  {res}log(_b[ATE:r2vs1.rec_vs_none] + _b[POmean:1.rec_vs_none]) - log(_b[POmean:1.rec_vs_none])
+       _nl_1:  {res}log(_b[ATE:r1vs0.rec_vs_none] + _b[POmean:0.rec_vs_none]) - log(_b[POmean:0.rec_vs_none])
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 1}          _t{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.10{col 26}{space 2}     0.24{col 37}{space 1}    0.41{col 46}{space 3} 0.68{col 54}{space 4}    -0.38{col 67}{space 3}     0.58
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}    -0.09{col 26}{space 2}     0.28{col 37}{space 1}   -0.31{col 46}{space 3} 0.75{col 54}{space 4}    -0.63{col 67}{space 3}     0.45
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}_nl_1 = 0{p_end}
@@ -952,27 +896,27 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 9}(1) {c |}{col 14}{res}{space 2}     1.10{col 26}{space 2}     0.27{col 37}{space 1}    0.41{col 46}{space 3} 0.68{col 54}{space 4}     0.69{col 67}{space 3}     1.78
+{space 9}(1) {c |}{col 14}{res}{space 2}     0.92{col 26}{space 2}     0.25{col 37}{space 1}   -0.31{col 46}{space 3} 0.75{col 54}{space 4}     0.53{col 67}{space 3}     1.58
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}1 2
-  {res}21
-
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
-{hline 13}{c +}{hline 57}
-{space 10}_t {c |}{res}         19    27.43609    15.02005   7.142857         60
-  6
+{res}{txt}0 1
+  {res}6
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}          5    36.22857    26.41073   15.57143   81.42857
+  21
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 10}_t {c |}{res}         18     27.5873    15.44062   7.142857         60
 {txt}(results {stata estimates replay rec_vs_nonrec_time:rec_vs_nonrec_time} are active now)
 
-       _nl_1:  {res}log(_b[ATE:r2vs1.rec_vs_nonrec] + _b[POmean:1.rec_vs_nonrec]) - log(_b[POmean:1.rec_vs_nonrec])
+       _nl_1:  {res}log(_b[ATE:r1vs0.rec_vs_nonrec] + _b[POmean:0.rec_vs_nonrec]) - log(_b[POmean:0.rec_vs_nonrec])
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 1}          _t{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 7}_nl_1 {c |}{col 14}{res}{space 2}    -0.12{col 26}{space 2}     0.24{col 37}{space 1}   -0.50{col 46}{space 3} 0.62{col 54}{space 4}    -0.60{col 67}{space 3}     0.35
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.12{col 26}{space 2}     0.26{col 37}{space 1}    0.44{col 46}{space 3} 0.66{col 54}{space 4}    -0.40{col 67}{space 3}     0.64
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}_nl_1 = 0{p_end}
@@ -980,27 +924,27 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 9}(1) {c |}{col 14}{res}{space 2}     0.89{col 26}{space 2}     0.21{col 37}{space 1}   -0.50{col 46}{space 3} 0.62{col 54}{space 4}     0.55{col 67}{space 3}     1.42
+{space 9}(1) {c |}{col 14}{res}{space 2}     1.12{col 26}{space 2}     0.30{col 37}{space 1}    0.44{col 46}{space 3} 0.66{col 54}{space 4}     0.67{col 67}{space 3}     1.89
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}1 2
-  {res}27
-
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
-{hline 13}{c +}{hline 57}
-{space 10}_t {c |}{res}         24    29.26786    17.64006   7.142857   81.42857
-  12
+{res}{txt}0 1
+  {res}12
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         12     28.2381     31.0725   4.857143   101.8571
+  27
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 10}_t {c |}{res}         23    29.46584    18.00923   7.142857   81.42857
 {txt}(results {stata estimates replay any_vs_none_time:any_vs_none_time} are active now)
 
-       _nl_1:  {res}log(_b[ATE:r2vs1.any_vs_none] + _b[POmean:1.any_vs_none]) - log(_b[POmean:1.any_vs_none])
+       _nl_1:  {res}log(_b[ATE:r1vs0.any_vs_none] + _b[POmean:0.any_vs_none]) - log(_b[POmean:0.any_vs_none])
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 1}          _t{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.10{col 26}{space 2}     0.25{col 37}{space 1}    0.39{col 46}{space 3} 0.70{col 54}{space 4}    -0.39{col 67}{space 3}     0.58
+{space 7}_nl_1 {c |}{col 14}{res}{space 2}    -0.07{col 26}{space 2}     0.25{col 37}{space 1}   -0.27{col 46}{space 3} 0.78{col 54}{space 4}    -0.55{col 67}{space 3}     0.42
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}_nl_1 = 0{p_end}
@@ -1008,8 +952,14 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 9}(1) {c |}{col 14}{res}{space 2}     1.10{col 26}{space 2}     0.27{col 37}{space 1}    0.39{col 46}{space 3} 0.70{col 54}{space 4}     0.68{col 67}{space 3}     1.79
+{space 9}(1) {c |}{col 14}{res}{space 2}     0.93{col 26}{space 2}     0.23{col 37}{space 1}   -0.27{col 46}{space 3} 0.78{col 54}{space 4}     0.58{col 67}{space 3}     1.51
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. `newpara'
 {res}{txt}
 {com}. 
 . // Start a new page.
@@ -1025,6 +975,21 @@ log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
 {txt}  5{com}.   putdocx text ("`title'")
 {txt}  6{com}.   putdocx image "products/Time-to-completion for `comparison_name'.png", linebreak
 {txt}  7{com}. {c )-}
+{res}{txt}
+{com}. 
+. // Discussion section
+. `heading'
+{res}{txt}
+{com}. putdocx text ("Discussion")
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. `newpara'
+{res}{txt}
+{com}. 
+. `newpara'
 {res}{txt}
 {com}. 
 . `heading'
@@ -1054,32 +1019,27 @@ Extended interval regression{col 49}Number of obs{col 67}= {res}        32
 {txt}{col 49}   Right-censored{col 67}= {res}         2
 {txt}{col 49}   Interval-cens.{col 67}= {res}         0
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}  12212.91
-{txt}Log likelihood = {res}-45.152288{txt}{col 49}Prob > chi2{col 67}= {res}    0.0000
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      7.22
+{txt}Log likelihood = {res}-55.193557{txt}{col 49}Prob > chi2{col 67}= {res}    0.0270
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}     1.69{col 49}{space 2}     0.28{col 60}{space 1}    6.04{col 69}{space 3} 0.00{col 77}{space 4}     1.14{col 90}{space 3}     2.24
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.97{col 49}{space 2}     0.37{col 60}{space 1}    2.63{col 69}{space 3} 0.01{col 77}{space 4}     0.25{col 90}{space 3}     1.70
 {txt}{space 35} {c |}
 {space 24}rec_vs_none {c |}
-{space 33}H  {c |}{col 37}{res}{space 2}    -2.31{col 49}{space 2}     0.28{col 60}{space 1}   -8.25{col 69}{space 3} 0.00{col 77}{space 4}    -2.86{col 90}{space 3}    -1.76
-{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.05{col 49}{space 2}     0.27{col 60}{space 1}   22.15{col 69}{space 3} 0.00{col 77}{space 4}     5.52{col 90}{space 3}     6.59
+{space 23}Recommended  {c |}{col 37}{res}{space 2}     1.31{col 49}{space 2}     1.19{col 60}{space 1}    1.11{col 69}{space 3} 0.27{col 77}{space 4}    -1.01{col 90}{space 3}     3.64
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     4.69{col 49}{space 2}     0.89{col 60}{space 1}    5.28{col 69}{space 3} 0.00{col 77}{space 4}     2.95{col 90}{space 3}     6.43
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}rec_vs_none                         {txt}{c |}
 {space 30}field {c |}
-{space 27}Welfare  {c |}{col 37}{res}{space 2}    -1.25{col 49}{space 2}     0.21{col 60}{space 1}   -6.12{col 69}{space 3} 0.00{col 77}{space 4}    -1.66{col 90}{space 3}    -0.85
-{txt}{space 35} {c |}
-{space 23}prespecified {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}    -1.45{col 49}{space 2}     0.32{col 60}{space 1}   -4.53{col 69}{space 3} 0.00{col 77}{space 4}    -2.08{col 90}{space 3}    -0.82
+{space 27}Welfare  {c |}{col 37}{res}{space 2}     0.90{col 49}{space 2}     0.48{col 60}{space 1}    1.89{col 69}{space 3} 0.06{col 77}{space 4}    -0.03{col 90}{space 3}     1.83
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}    -0.10{col 49}{space 2}     0.35{col 60}{space 1}   -0.28{col 69}{space 3} 0.78{col 77}{space 4}    -0.78{col 90}{space 3}     0.59
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}/rec_vs_none                        {txt}{c |}
-{space 31}cut1 {c |}{col 37}{res}{space 2}    -0.55{col 49}{space 2}     0.22{col 77}{space 4}    -0.99{col 90}{space 3}    -0.11
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.58{col 49}{space 2}     0.15{col 77}{space 4}     0.35{col 90}{space 3}     0.96
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.98{col 49}{space 2}     0.25{col 77}{space 4}     0.59{col 90}{space 3}     1.62
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     1.00{col 49}{space 2}        .{col 60}{space 1}       .{col 69}{space 3}    .{col 77}{space 4}        .{col 90}{space 3}        .
+{space 1}corr(e.rec_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.01{col 49}{space 2}     1.07{col 60}{space 1}    0.01{col 69}{space 3} 0.99{col 77}{space 4}    -0.97{col 90}{space 3}     0.97
 {txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}(results {stata estimates replay rec_vs_none_time:rec_vs_none_time} are active now)
 
@@ -1087,75 +1047,80 @@ Extended interval regression{col 49}Number of obs{col 67}= {res}        32
 {p 0 8}Model {hi:rec_vs_none_time}{p_end}
 {hline}
 
-Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        33
+Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        32
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
 {txt:Outcome model}{col 16}:{res: Weibull}
 {txt:Treatment model}{col 16}:{res: logit}
 {txt:Censoring model}{col 16}:{res: none}
-{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 23}{c |}{col 35}    Robust
-{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
-{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}ATE                   {txt}{c |}
-{space 10}rec_vs_none {c |}
-{space 12}(H vs G)  {c |}{col 23}{res}{space 2}     3.22{col 35}{space 2}     8.16{col 46}{space 1}    0.40{col 55}{space 3} 0.69{col 63}{space 4}   -12.77{col 76}{space 3}    19.22
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}POmean                {txt}{c |}
-{space 10}rec_vs_none {c |}
-{space 19}G  {c |}{col 23}{res}{space 2}    30.89{col 35}{space 2}     4.13{col 46}{space 1}    7.48{col 55}{space 3} 0.00{col 63}{space 4}    22.79{col 76}{space 3}    38.98
-{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{txt}{hline 23}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 24}{c |}{col 36}    Robust
+{col 1}                    _t{col 24}{c |}      Coef.{col 36}   Std. Err.{col 48}      z{col 56}   P>|z|{col 64}     [95% Con{col 77}f. Interval]
+{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}ATE                    {txt}{c |}
+{space 11}rec_vs_none {c |}
+(Recommended vs None)  {c |}{col 24}{res}{space 2}    -3.02{col 36}{space 2}     9.65{col 47}{space 1}   -0.31{col 56}{space 3} 0.75{col 64}{space 4}   -21.93{col 77}{space 3}    15.90
+{txt}{hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}POmean                 {txt}{c |}
+{space 11}rec_vs_none {c |}
+{space 17}None  {c |}{col 24}{res}{space 2}    36.34{col 36}{space 2}     7.68{col 47}{space 1}    4.73{col 56}{space 3} 0.00{col 64}{space 4}    21.28{col 77}{space 3}    51.40
+{txt}{hline 23}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}(results {stata estimates replay rec_vs_nonrec_resource:rec_vs_nonrec_resource} are active now)
 
 {hline}
 {p 0 8}Model {hi:rec_vs_nonrec_resource}{p_end}
 {hline}
 
-Interval regression{col 49}Number of obs{col 67}= {res}        27
+Extended interval regression{col 49}Number of obs{col 67}= {res}        27
 {txt}{col 49}   Uncensored{col 67}= {res}        24
 {txt}{col 49}   Left-censored{col 67}= {res}         0
 {txt}{col 49}   Right-censored{col 67}= {res}         3
 {txt}{col 49}   Interval-cens.{col 67}= {res}         0
 
-{txt}{col 49}LR chi2({res}2{txt}){col 67}= {res}      3.25
-{txt}Log likelihood = {res}-27.958832{txt}{col 49}Prob > chi2{col 67}= {res}    0.1973
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      1.93
+{txt}Log likelihood = {res}-42.156242{txt}{col 49}Prob > chi2{col 67}= {res}    0.3813
 
-{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
-{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 8}rec_vs_nonrec {c |}
-{space 19}K  {c |}{col 23}{res}{space 2}     0.40{col 35}{space 2}     0.33{col 46}{space 1}    1.22{col 55}{space 3} 0.22{col 63}{space 4}    -0.24{col 76}{space 3}     1.05
-{txt}{space 21} {c |}
-meta_analysis_planned {c |}
-{space 17}Yes  {c |}{col 23}{res}{space 2}     0.33{col 35}{space 2}     0.27{col 46}{space 1}    1.21{col 55}{space 3} 0.23{col 63}{space 4}    -0.20{col 76}{space 3}     0.86
-{txt}{space 16}_cons {c |}{col 23}{res}{space 2}     6.31{col 35}{space 2}     0.20{col 46}{space 1}   31.63{col 55}{space 3} 0.00{col 63}{space 4}     5.91{col 76}{space 3}     6.70
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-             /lnsigma {c |}{col 23}{res}{space 2}    -0.38{col 35}{space 2}     0.15{col 46}{space 1}   -2.55{col 55}{space 3} 0.01{col 63}{space 4}    -0.66{col 76}{space 3}    -0.09
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-                sigma {c |}{col 23}{res}{space 2}     0.69{col 35}{space 2}     0.10{col 63}{space 4}     0.51{col 76}{space 3}     0.92
-{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{txt}{hline 38}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 39}{c |}      Coef.{col 51}   Std. Err.{col 63}      z{col 71}   P>|z|{col 79}     [95% Con{col 92}f. Interval]
+{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 16}meta_analysis_planned {c |}
+{space 33}Yes  {c |}{col 39}{res}{space 2}     0.32{col 51}{space 2}     0.28{col 62}{space 1}    1.11{col 71}{space 3} 0.27{col 79}{space 4}    -0.24{col 92}{space 3}     0.87
+{txt}{space 37} {c |}
+{space 24}rec_vs_nonrec {c |}
+{space 25}Recommended  {c |}{col 39}{res}{space 2}    -0.69{col 51}{space 2}     1.56{col 62}{space 1}   -0.44{col 71}{space 3} 0.66{col 79}{space 4}    -3.76{col 92}{space 3}     2.37
+{txt}{space 32}_cons {c |}{col 39}{res}{space 2}     6.94{col 51}{space 2}     1.28{col 62}{space 1}    5.42{col 71}{space 3} 0.00{col 79}{space 4}     4.43{col 92}{space 3}     9.45
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}rec_vs_nonrec                         {txt}{c |}
+{space 25}prespecified {c |}
+{space 33}Yes  {c |}{col 39}{res}{space 2}    -0.26{col 51}{space 2}     0.56{col 62}{space 1}   -0.47{col 71}{space 3} 0.64{col 79}{space 4}    -1.37{col 92}{space 3}     0.84
+{txt}{space 32}_cons {c |}{col 39}{res}{space 2}     0.92{col 51}{space 2}     0.44{col 62}{space 1}    2.11{col 71}{space 3} 0.03{col 79}{space 4}     0.07{col 92}{space 3}     1.78
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 18}var(e.log_resource1){c |}{col 39}{res}{space 2}     0.49{col 51}{space 2}     0.21{col 79}{space 4}     0.21{col 92}{space 3}     1.15
+{txt}{hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 1}corr(e.rec_vs_nonrec,e.log_resource1){c |}{col 39}{res}{space 2}     0.24{col 51}{space 2}     1.24{col 62}{space 1}    0.20{col 71}{space 3} 0.84{col 79}{space 4}    -0.98{col 92}{space 3}     0.99
+{txt}{hline 38}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}(results {stata estimates replay rec_vs_nonrec_time:rec_vs_nonrec_time} are active now)
 
 {hline}
 {p 0 8}Model {hi:rec_vs_nonrec_time}{p_end}
 {hline}
 
-Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        27
+Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        26
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
 {txt:Outcome model}{col 16}:{res: Weibull}
 {txt:Treatment model}{col 16}:{res: logit}
 {txt:Censoring model}{col 16}:{res: none}
-{txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 23}{c |}{col 35}    Robust
-{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
-{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}ATE                   {txt}{c |}
-{space 8}rec_vs_nonrec {c |}
-{space 12}(K vs J)  {c |}{col 23}{res}{space 2}    -3.93{col 35}{space 2}     8.06{col 46}{space 1}   -0.49{col 55}{space 3} 0.63{col 63}{space 4}   -19.73{col 76}{space 3}    11.87
-{txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}POmean                {txt}{c |}
-{space 8}rec_vs_nonrec {c |}
-{space 19}J  {c |}{col 23}{res}{space 2}    34.36{col 35}{space 2}     7.36{col 46}{space 1}    4.67{col 55}{space 3} 0.00{col 63}{space 4}    19.94{col 76}{space 3}    48.78
-{txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{txt}{hline 34}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 35}{c |}{col 47}    Robust
+{col 1}                               _t{col 35}{c |}      Coef.{col 47}   Std. Err.{col 59}      z{col 67}   P>|z|{col 75}     [95% Con{col 88}f. Interval]
+{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}ATE                               {txt}{c |}
+{space 20}rec_vs_nonrec {c |}
+(Recommended vs Non-recommended)  {c |}{col 35}{res}{space 2}     3.83{col 47}{space 2}     8.79{col 58}{space 1}    0.44{col 67}{space 3} 0.66{col 75}{space 4}   -13.39{col 88}{space 3}    21.06
+{txt}{hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}POmean                            {txt}{c |}
+{space 20}rec_vs_nonrec {c |}
+{space 17}Non-recommended  {c |}{col 35}{res}{space 2}    30.87{col 47}{space 2}     5.66{col 58}{space 1}    5.45{col 67}{space 3} 0.00{col 75}{space 4}    19.77{col 88}{space 3}    41.97
+{txt}{hline 34}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}(results {stata estimates replay any_vs_none_resource:any_vs_none_resource} are active now)
 
 {hline}
@@ -1168,32 +1133,27 @@ Extended interval regression{col 49}Number of obs{col 67}= {res}        38
 {txt}{col 49}   Right-censored{col 67}= {res}         3
 {txt}{col 49}   Interval-cens.{col 67}= {res}         0
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     32.82
-{txt}Log likelihood = {res}-55.799063{txt}{col 49}Prob > chi2{col 67}= {res}    0.0000
+{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     10.37
+{txt}Log likelihood = {res}-64.982942{txt}{col 49}Prob > chi2{col 67}= {res}    0.0056
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}     0.90{col 49}{space 2}     0.33{col 60}{space 1}    2.73{col 69}{space 3} 0.01{col 77}{space 4}     0.25{col 90}{space 3}     1.55
+{space 31}Yes  {c |}{col 37}{res}{space 2}     0.99{col 49}{space 2}     0.31{col 60}{space 1}    3.17{col 69}{space 3} 0.00{col 77}{space 4}     0.38{col 90}{space 3}     1.61
 {txt}{space 35} {c |}
 {space 24}any_vs_none {c |}
-{space 33}R  {c |}{col 37}{res}{space 2}    -2.49{col 49}{space 2}     0.44{col 60}{space 1}   -5.71{col 69}{space 3} 0.00{col 77}{space 4}    -3.34{col 90}{space 3}    -1.63
-{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     6.42{col 49}{space 2}     0.20{col 60}{space 1}   31.71{col 69}{space 3} 0.00{col 77}{space 4}     6.03{col 90}{space 3}     6.82
+{space 31}Any  {c |}{col 37}{res}{space 2}    -0.43{col 49}{space 2}     0.55{col 60}{space 1}   -0.77{col 69}{space 3} 0.44{col 77}{space 4}    -1.52{col 90}{space 3}     0.66
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     5.97{col 49}{space 2}     0.41{col 60}{space 1}   14.42{col 69}{space 3} 0.00{col 77}{space 4}     5.16{col 90}{space 3}     6.79
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}any_vs_none                         {txt}{c |}
 {space 30}field {c |}
-{space 27}Welfare  {c |}{col 37}{res}{space 2}    -0.46{col 49}{space 2}     0.44{col 60}{space 1}   -1.04{col 69}{space 3} 0.30{col 77}{space 4}    -1.32{col 90}{space 3}     0.40
-{txt}{space 35} {c |}
-{space 23}prespecified {c |}
-{space 31}Yes  {c |}{col 37}{res}{space 2}    -1.92{col 49}{space 2}     0.41{col 60}{space 1}   -4.66{col 69}{space 3} 0.00{col 77}{space 4}    -2.73{col 90}{space 3}    -1.11
+{space 27}Welfare  {c |}{col 37}{res}{space 2}     0.59{col 49}{space 2}     0.31{col 60}{space 1}    1.89{col 69}{space 3} 0.06{col 77}{space 4}    -0.02{col 90}{space 3}     1.20
+{txt}{space 30}_cons {c |}{col 37}{res}{space 2}     0.28{col 49}{space 2}     0.25{col 60}{space 1}    1.13{col 69}{space 3} 0.26{col 77}{space 4}    -0.21{col 90}{space 3}     0.76
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}/any_vs_none                        {txt}{c |}
-{space 31}cut1 {c |}{col 37}{res}{space 2}    -0.44{col 49}{space 2}     0.30{col 77}{space 4}    -1.03{col 90}{space 3}     0.15
+{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     1.34{col 49}{space 2}     0.55{col 77}{space 4}     0.61{col 90}{space 3}     2.98
 {txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 16}var(e.log_resource1){c |}{col 37}{res}{space 2}     0.86{col 49}{space 2}     0.31{col 77}{space 4}     0.42{col 90}{space 3}     1.73
-{txt}{hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{space 1}corr(e.any_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.94{col 49}{space 2}     0.11{col 60}{space 1}    8.78{col 69}{space 3} 0.00{col 77}{space 4}    -0.11{col 90}{space 3}     1.00
+{space 1}corr(e.any_vs_none,e.log_resource1){c |}{col 37}{res}{space 2}     0.95{col 49}{space 2}     0.08{col 60}{space 1}   12.47{col 69}{space 3} 0.00{col 77}{space 4}     0.25{col 90}{space 3}     1.00
 {txt}{hline 36}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}(results {stata estimates replay any_vs_none_time:any_vs_none_time} are active now)
 
@@ -1201,7 +1161,7 @@ Extended interval regression{col 49}Number of obs{col 67}= {res}        38
 {p 0 8}Model {hi:any_vs_none_time}{p_end}
 {hline}
 
-Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        39
+Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        38
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
 {txt:Outcome model}{col 16}:{res: Weibull}
 {txt:Treatment model}{col 16}:{res: logit}
@@ -1212,11 +1172,11 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                   {txt}{c |}
 {space 10}any_vs_none {c |}
-{space 12}(R vs Q)  {c |}{col 23}{res}{space 2}     3.28{col 35}{space 2}     8.71{col 46}{space 1}    0.38{col 55}{space 3} 0.71{col 63}{space 4}   -13.79{col 76}{space 3}    20.36
+{space 7}(Any vs None)  {c |}{col 23}{res}{space 2}    -2.48{col 35}{space 2}     9.15{col 46}{space 1}   -0.27{col 55}{space 3} 0.79{col 63}{space 4}   -20.41{col 76}{space 3}    15.45
 {txt}{hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}POmean                {txt}{c |}
 {space 10}any_vs_none {c |}
-{space 19}Q  {c |}{col 23}{res}{space 2}    32.36{col 35}{space 2}     4.53{col 46}{space 1}    7.14{col 55}{space 3} 0.00{col 63}{space 4}    23.48{col 76}{space 3}    41.23
+{space 16}None  {c |}{col 23}{res}{space 2}    37.97{col 35}{space 2}     7.98{col 46}{space 1}    4.76{col 55}{space 3} 0.00{col 63}{space 4}    22.34{col 76}{space 3}    53.60
 {txt}{hline 22}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}
 {com}. 

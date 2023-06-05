@@ -13,3 +13,6 @@ sysdir set PERSONAL "./packages"
 set cformat %9.2f
 set pformat %5.2f
 set sformat %8.2f
+
+// Set the graphics scheme.
+set scheme white_background

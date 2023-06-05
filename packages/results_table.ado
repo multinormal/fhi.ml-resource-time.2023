@@ -21,10 +21,12 @@ program results_table
   }
 
   // Make the table of main results.
-  local note        ¹Data are means of samples restricted to completed (uncensored) reviews. ²Estimates are relative
-  local note `note' resource use and relative time-to-completion, account for right-censored outcomes
-  local note `note' and, except for the recommended versus non-recommended ML use comparison for the
-  local note `note' outcome resource use, also account for nonrandom endogenous treatment allocation.
+  local note        ¹Data are means of samples restricted to completed (uncensored) reviews and
+  local note `note' do not account for nonrandom endogenous treatment allocation.
+  local note `note' ²Estimates are relative resource use and relative time-to-completion, and account 
+  local note `note' for right-censored outcomes and nonrandom endogenous treatment allocation.
+  local note `note' An effect estimate < 1 indicates that recommended or any ML use is associated with
+  local note `note' less resource use or shorter time-to-completion than to the comparator.
   local note `note' All estimates are adjusted for planned meta-analysis.
   frame `frame' {
     putdocx table results = data(*), varnames note("`note'") border(all, nil) layout(autofitcontents)
@@ -74,7 +76,7 @@ program resource_row
 
   // Get the effect estimate, relative resource use via exponentiation.
   estimate restore `comparison'_resource
-  local contrast : word 2 of `levels' // TODO: After unblinding, replace this with known base levels via fvset or similar.
+  local contrast 1 // The comparisons are indicators, where 1 indicates our preferred ML use.
   lincom `contrast'.`comparison' , eform
   local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
 
@@ -111,7 +113,7 @@ program time_row
   // We do this on the log scale and then exponentiate, which allows us to get a p-value that tests the null that
   // the log ratio is zero (equivalent to the ratio being one).
   estimate restore `comparison'_time
-  nlcom log(_b[ATE:r2vs1.`comparison'] + _b[POmean:1.`comparison']) - log(_b[POmean:1.`comparison']), post
+  nlcom log(_b[ATE:r1vs0.`comparison'] + _b[POmean:0.`comparison']) - log(_b[POmean:0.`comparison']), post
   lincom _nl_1 , eform
   local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
 
