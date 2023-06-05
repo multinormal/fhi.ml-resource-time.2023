@@ -91,7 +91,7 @@ sample_characteristics
 // Insert the table of results.
 results_table
 
-`newpara' // TODO: This text is not automatically generated.
+`newpara'
 The strength of evidence for endogeneity varied by comparison. For example, 
 the correlation between use of any versus no ML and resource use was 0.95 
 (95% CI 0.25 to 1.00; p<0.0001) while that for recommended versus 
@@ -99,7 +99,7 @@ no ML use was 0.01 (95% CI -0.97 to 0.97; p=0.99). However, as far as possible,
 we chose to account for possible endogeneity according to our protocol.
 putdocx textblock end
 
-`newpara' // TODO: This text is not automatically generated.
+`newpara'
 Due to the smaller than anticipated sample size, none of the effect estimates were 
 sufficiently precise to be able to conclude that use of recommended or any ML is 
 associated with more or less resource use, or longer or shorter time-to-completion, 
@@ -136,7 +136,7 @@ foreach comparison of global comparisons {
 `heading'
 putdocx text ("Discussion")
 
-`newpara' // TODO: This text is not automatically generated.
+`newpara'
 Results for the resource use outcome are a little challenging to interpret. The effect 
 estimates suggest that recommended or any ML use is associated with less resource use 
 compared to non-recommended or no ML use, but the sample means for the any versus no ML use 
@@ -148,7 +148,7 @@ perhaps reviews that did not use ML did not do so because they were judged to be
 "easy" reviews are not resource intensive.
 putdocx textblock end
 
-`newpara' // TODO: This text is not automatically generated.
+`newpara'
 Results for the time-to-completion outcome are somewhat easier to interpret. The effect 
 estimates suggest that recommended or any ML use is associated with shorter time-to-completion 
 compared to no ML use. These results are consistent with our experience and with one of 
@@ -158,7 +158,7 @@ strongly suggest otherwise. Because the estimate is imprecise, and the point est
 close to the null, it would not surprise us if the direction of effect is wrong.
 putdocx textblock end
 
-`newpara' // TODO: This text is not automatically generated.
+`newpara'
 We think the results for the time-to-completion outcome are somewhat easier to interpret than 
 those for resource use because review commission and completion dates (which are used to 
 define time-to-completion) are well-defined and easy to measure, while resource use is essentially 

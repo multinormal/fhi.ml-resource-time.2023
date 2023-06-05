@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}20 Apr 2023, 17:52:52
+ {txt}opened on:  {res} 5 Jun 2023, 13:02:37
 {txt}
 {com}. 
 . // Set up globals.
@@ -125,358 +125,11 @@
 . // Only import and process the data if necessary.
 . if fileexists("${c -(}exported_data_file{c )-}") {c -(}
 .   disp "{c -(}hline{c )-}"
-.   disp as result "Using existing processed data"
-.   exit
-. {c )-}
-{txt}
-{com}. 
-. // Load the data and check its signature is as expected.
-. import excel "${c -(}data_file{c )-}", sheet("${c -(}sheet_name{c )-}") cellrange(${c -(}cellrange{c )-}) firstrow allstring
-{res}{text}(57 vars, 39 obs)
+{res}{hline}
+{com}.   disp as result "Using existing processed data"
+{res}Using existing processed data
+{com}.   exit
 
-{com}. frame copy default orig // TODO: REMOVE THIS
-{txt}
-{com}. datasignature
-  {res}39:57(80915):1037905700:239166213
-{txt}
-{com}. assert r(datasignature) == "${c -(}signature{c )-}"
-{txt}
-{com}. 
-. // Define a variable that specifies the product's year.
-. tempvar year
-{txt}
-{com}. rename Year `year'
-{res}{txt}
-{com}. destring `year', generate(year)
-{txt}__000000: all characters numeric; year {res}generated {txt}as {res}int
-{txt}
-{com}. 
-. // Rename and encode the health/welfare variable.
-. tempvar field
-{txt}
-{com}. rename AreaHealthorWelfare `field'
-{res}{txt}
-{com}. replace `field' = "Healthcare" if `field' == "H"
-{txt}variable {bf}__000001{sf} was {bf}{res}str1{sf}{txt} now {bf}{res}str10{sf}
-{txt}(19 real changes made)
-
-{com}. replace `field' = "Welfare"    if `field' == "W"
-{txt}(20 real changes made)
-
-{com}. encode `field' , generate(field)
-{txt}
-{com}. 
-. // Rename and encode the variable that codes for the type of product.
-. tempvar product_type
-{txt}
-{com}. rename Typeofproduct `product_type'
-{res}{txt}
-{com}. encode `product_type', generate(product_type)
-{txt}
-{com}. 
-. // Rename and encode the variable that codes for whether product is an update.
-. tempvar update
-{txt}
-{com}. rename UpdateYN `update'
-{res}{txt}
-{com}. replace `update' = strtrim(`update')
-{txt}(2 real changes made)
-
-{com}. encode `update', generate(update)
-{txt}
-{com}. 
-. // Define treatment variables.
-. // Treatment variables will contain valid missing values, e.g. for recommended vs none where some reviews used non-recommended ML.
-. // We define "intervention" (i.e., the type of ML use we would prefer reviewers to use) as 1, and "control" as 0.
-. generate          rec_vs_none = .
-{txt}(39 missing values generated)
-
-{com}. replace           rec_vs_none = 0 if RecommendedvsNone == "H" // None
-{txt}(12 real changes made)
-
-{com}. replace           rec_vs_none = 1 if RecommendedvsNone == "G" // Recommended
-{txt}(21 real changes made)
-
-{com}. label    define   rec_vs_none 0 "None" 1 "Recommended"
-{txt}
-{com}. label    values   rec_vs_none rec_vs_none
-{txt}
-{com}. 
-. generate          rec_vs_nonrec = .
-{txt}(39 missing values generated)
-
-{com}. replace           rec_vs_nonrec = 0 if RecommendedvsNonrecom == "K" // Non-recommended
-{txt}(6 real changes made)
-
-{com}. replace           rec_vs_nonrec = 1 if RecommendedvsNonrecom == "J" // Recommended
-{txt}(21 real changes made)
-
-{com}. label    define   rec_vs_nonrec 0 "Non-recommended" 1 "Recommended"
-{txt}
-{com}. label    values   rec_vs_nonrec rec_vs_nonrec
-{txt}
-{com}. 
-. generate          any_vs_none = .
-{txt}(39 missing values generated)
-
-{com}. replace           any_vs_none = 0 if AnyvsNone == "R" // None
-{txt}(12 real changes made)
-
-{com}. replace           any_vs_none = 1 if AnyvsNone == "Q" // Any
-{txt}(27 real changes made)
-
-{com}. label    define   any_vs_none 0 "None" 1 "Any"
-{txt}
-{com}. label    values   any_vs_none any_vs_none
-{txt}
-{com}. 
-. generate          rec_vs_under = .
-{txt}(39 missing values generated)
-
-{com}. replace           rec_vs_under = 0 if Recomvsunderuse == "U" // Under-use
-{txt}(5 real changes made)
-
-{com}. replace           rec_vs_under = 1 if Recomvsunderuse == "T" // Recommended
-{txt}(20 real changes made)
-
-{com}. label    define   rec_vs_under 0 "Under-use" 1 "Recommended"
-{txt}
-{com}. label    values   rec_vs_under rec_vs_under
-{txt}
-{com}. 
-. generate          rec_vs_over = .
-{txt}(39 missing values generated)
-
-{com}. replace           rec_vs_over = 0 if Recomvsoveruse == "E" // Over-use
-{txt}(1 real change made)
-
-{com}. replace           rec_vs_over = 1 if Recomvsoveruse == "D" // Recommended
-{txt}(20 real changes made)
-
-{com}. label    define   rec_vs_over 0 "Over-use" 1 "Recommended"
-{txt}
-{com}. label    values   rec_vs_over rec_vs_over
-{txt}
-{com}. 
-. // Define the variable labels for the comparisons.
-. label variable rec_vs_none   "Recommended vs No ML Use"
-{txt}
-{com}. label variable rec_vs_nonrec "Recommended vs Non-recommended ML Use"
-{txt}
-{com}. label variable any_vs_none   "Any vs No ML Use"
-{txt}
-{com}. // Note: We do not use the other comparisons, so will not rename them.
-. 
-. // Define a value label for analyses that can be prespecified.
-. label define no_yes_label 0 No 1 Yes
-{txt}
-{com}. 
-. // Define variables that code for prespecified synthesis (any), meta-analysis (incl.
-. // quantitative and qualitative), NMA, etc.
-. local vars        SynthesisplannednoneYorN SynthesisplannedMetaAnalysis SynthesisplannedNMAYorN
-{txt}
-{com}. local vars `vars' Rankingalgorithmduringstudyi Classifiersduringstudyidenti Classifiersduringdataextracti
-{txt}
-{com}. local vars `vars' Clusteringduringstudyidentifi Clusteringduringdataextractio OpenAlexduringstudyidentifica
-{txt}
-{com}. local vars `vars' RoBassessmentYorN AutomateddataextractionYor OtherMLYorN
-{txt}
-{com}. local ProtocolavailableYorN           prespecified              // New variable name.
-{txt}
-{com}. local SynthesisplannednoneYorN        synthesis_planned         // New variable name.
-{txt}
-{com}. local SynthesisplannedMetaAnalysis    meta_analysis_planned     // New variable name.
-{txt}
-{com}. local SynthesisplannedNMAYorN         nma_planned               // New variable name.
-{txt}
-{com}. local Rankingalgorithmduringstudyi    ranking_identification    // New variable name.
-{txt}
-{com}. local Classifiersduringstudyidenti    classifier_identification // New variable name.
-{txt}
-{com}. local Classifiersduringdataextracti   classifier_extraction     // New variable name.
-{txt}
-{com}. local Clusteringduringstudyidentifi   clustering_identification // New variable name.
-{txt}
-{com}. local Clusteringduringdataextractio   clustering_extraction     // New variable name.
-{txt}
-{com}. local OpenAlexduringstudyidentifica   openalex_identification   // New variable name.
-{txt}
-{com}. local RoBassessmentYorN               rob_assessment            // New variable name.
-{txt}
-{com}. local AutomateddataextractionYor      automated_extraction      // New variable name.
-{txt}
-{com}. local OtherMLYorN                     other_ml                  // New variable name.
-{txt}
-{com}. local synthesis_planned_label         "Was any synthesis planned?"
-{txt}
-{com}. local meta_analysis_planned_label     "Was meta-analysis planned?"
-{txt}
-{com}. local nma_planned_label               "Was NMA planned?"
-{txt}
-{com}. local ranking_identification_label    "Ranking algorithm during study identification"
-{txt}
-{com}. local classifier_identification_label "Classifiers during study identification"
-{txt}
-{com}. local classifier_extraction_label     "Classifiers during data extraction"
-{txt}
-{com}. local clustering_identification_label "Clustering during study identification"
-{txt}
-{com}. local clustering_extraction_label     "Clustering during data extraction"
-{txt}
-{com}. local openalex_identification_label   "OpenAlex during study identification"
-{txt}
-{com}. local rob_assessment_label            "ML for RoB assessment"
-{txt}
-{com}. local automated_extraction            "Automated data extraction"
-{txt}
-{com}. local other_ml_label                  "Other ML"
-{txt}
-{com}. 
-. foreach p of local vars {c -(}
-{txt}  2{com}.   generate       ``p'' = 0
-{txt}  3{com}.   replace        ``p'' = 1 if `p' != "N" // Works for one value coded "Both".
-{txt}  4{com}.   label values   ``p'' no_yes_label
-{txt}  5{com}.   label variable ``p'' "```p''_label'"
-{txt}  6{com}.   drop `p'
-{txt}  7{com}. {c )-}
-{txt}(20 real changes made)
-(18 real changes made)
-(0 real changes made)
-(25 real changes made)
-(12 real changes made)
-(0 real changes made)
-(8 real changes made)
-(1 real change made)
-(5 real changes made)
-(0 real changes made)
-(0 real changes made)
-(0 real changes made)
-
-{com}. 
-. // Define the HTA variable.
-. generate hta = 0
-{txt}
-{com}. replace  hta = 1 if HTAYorN == "Y"
-{txt}(7 real changes made)
-
-{com}. label values   hta no_yes_label
-{txt}
-{com}. label variable hta "Health technology assessment?"
-{txt}
-{com}. 
-. // Define the prespecified variable (whether a protocol was published).
-. generate prespecified = 0
-{txt}
-{com}. replace  prespecified = 1 if regexm(ProtocolLink, "http.*")
-{txt}(16 real changes made)
-
-{com}. label values   prespecified no_yes_label
-{txt}
-{com}. label variable prespecified "Was the work pre-specified?"
-{txt}
-{com}. drop ProtocolLink
-{txt}
-{com}. 
-. // Define a completed variable (analogous to a failure indicator in survival analysis).
-. generate          completed = 1
-{txt}
-{com}. replace           completed = 0 if OngoingYorN == "Y"
-{txt}(3 real changes made)
-
-{com}. label    define   completed 0 No 1 Yes
-{txt}
-{com}. label    values   completed completed
-{txt}
-{com}. label    variable completed "Report completed?"
-{txt}
-{com}. drop OngoingYorN
-{txt}
-{com}. 
-. // Define the resource use variable.
-. tempvar resource
-{txt}
-{com}. rename ResourceUsePersonHours `resource'
-{res}{txt}
-{com}. destring `resource', replace force // One missing outcome.
-{txt}__000004: contains nonnumeric characters; {res}replaced {txt}as {res}int
-{txt}(1 missing value generated)
-{res}{txt}
-{com}. generate log_resource1 = log(`resource')
-{txt}(1 missing value generated)
-
-{com}. generate log_resource2 = log(`resource')
-{txt}(1 missing value generated)
-
-{com}. replace  log_resource2 = . if !completed // For right-censored data.
-{txt}(3 real changes made, 3 to missing)
-
-{com}. label variable log_resource1 "Lower-bound on resource use (log person-hours)"
-{txt}
-{com}. label variable log_resource2 "Upper-bound on resource use (log person-hours); possibly censored"
-{txt}
-{com}. 
-. // Define commission date variable.
-. tempvar c_day c_month c_year commission
-{txt}
-{com}. rename CommissionDay131   `c_day'
-{res}{txt}
-{com}. rename CommissionMonth112 `c_month'
-{res}{txt}
-{com}. rename CommissionYear2020 `c_year'
-{res}{txt}
-{com}. generate `commission' = `c_day' + "/" + `c_month' + "/" + `c_year'
-{txt}
-{com}. generate commission = date(`commission', "DMY")
-{txt}
-{com}. label variable commission "Commission date"
-{txt}
-{com}. 
-. // Define completion date variable.
-. tempvar c_day c_month c_year completion
-{txt}
-{com}. rename CompletionDay131   `c_day'
-{res}{txt}
-{com}. rename CompletionMonth112 `c_month'
-{res}{txt}
-{com}. rename CompletionYear2020 `c_year'
-{res}{txt}
-{com}. generate `completion' = `c_day' + "/" + `c_month' + "/" + `c_year'
-{txt}
-{com}. generate completion = date(`completion', "DMY")
-{txt}(3 missing values generated)
-
-{com}. // Set right-censoring date for ongoing reviews.
-. replace completion = date("31/01/2023", "DMY") if missing(completion) // Date at end of data extraction.
-{txt}(3 real changes made)
-
-{com}. label variable completion "Completion date (possibly censored)"
-{txt}
-{com}. 
-. // We do not have data on number of downloads or commissioner satisfaction.
-. drop Commissionersatisfactionoveral Numberofdownloadstodate
-{txt}
-{com}. 
-. // Ensure that there are no NMAs in the sample.
-. levelsof nma_planned
-{res}{txt}0
-
-{com}. assert r(r) == 1 // Multiple levels would indicate ≥1 NMA.
-{txt}
-{com}. 
-. // Keep just the variables necessary for analysis.
-. local to_keep completion completed commission ${c -(}resource_outcome{c )-} *_vs_* prespecified ${c -(}adj_var{c )-} ${c -(}endo_vars{c )-}
-{txt}
-{com}. local to_keep `to_keep' hta nma_planned synthesis_planned *_identification *_extraction rob_assessment other_ml
-{txt}
-{com}. local to_keep = subinstr("`to_keep'", "i.", "", .)
-{txt}
-{com}. keep `to_keep'
-{txt}
-{com}. save ${c -(}exported_data_file{c )-}, replace
-{txt}(note: file products/resource-time.dta not found)
-file products/resource-time.dta saved
-
-{com}. 
 {txt}end of do-file
 
 {com}. 
@@ -1303,10 +956,10 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}
 {com}. 
-. `newpara' // TODO: This text is not automatically generated.
+. `newpara'
 {res}{txt}
 {com}. 
-. `newpara' // TODO: This text is not automatically generated.
+. `newpara'
 {res}{txt}
 {com}. 
 . // Start a new page.
@@ -1330,13 +983,13 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {com}. putdocx text ("Discussion")
 {res}{txt}
 {com}. 
-. `newpara' // TODO: This text is not automatically generated.
+. `newpara'
 {res}{txt}
 {com}. 
-. `newpara' // TODO: This text is not automatically generated.
+. `newpara'
 {res}{txt}
 {com}. 
-. `newpara' // TODO: This text is not automatically generated.
+. `newpara'
 {res}{txt}
 {com}. 
 . `heading'

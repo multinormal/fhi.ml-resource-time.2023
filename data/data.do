@@ -9,7 +9,6 @@ if fileexists("${exported_data_file}") {
 
 // Load the data and check its signature is as expected.
 import excel "${data_file}", sheet("${sheet_name}") cellrange(${cellrange}) firstrow allstring
-frame copy default orig // TODO: REMOVE THIS
 datasignature
 assert r(datasignature) == "${signature}"
 
