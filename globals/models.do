@@ -1,4 +1,4 @@
-version 16.1
+version 18
 
 // Specify the time use models.
 foreach comparison of global comparisons {

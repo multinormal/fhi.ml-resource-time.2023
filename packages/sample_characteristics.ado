@@ -1,4 +1,4 @@
-version 16.1
+version 18
 
 program sample_characteristics, nclass
   local note Data are number of reviews and percent of all included reviews.

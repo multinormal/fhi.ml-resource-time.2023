@@ -1,4 +1,4 @@
-version 16.1
+version 18
 set graphics off
 
 // Specify options for the KM plots.
