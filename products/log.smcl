@@ -3,13 +3,13 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}13 Sep 2023, 12:20:28
+ {txt}opened on:  {res}13 Sep 2023, 12:22:16
 {txt}
 {com}. 
 . // Set up globals.
 . do globals/globals
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. 
 . global data_file  "data/raw/Final data sheet_31012023_jm.xlsx"
@@ -60,7 +60,7 @@
 
 {com}. do globals/models
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. 
 . // Specify the time use models.
@@ -84,7 +84,7 @@
 . // Set up Stata.
 . do setup/setup
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. 
 . // Set the random number generator seed.
@@ -119,7 +119,7 @@
 . // Import, process the data.
 . do data/data
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. 
 . // Only import and process the data if necessary.
@@ -138,7 +138,7 @@
 {txt}
 {com}. do data/use
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. 
 . use ${c -(}exported_data_file{c )-}
@@ -178,7 +178,7 @@
 . // Do estimation.
 . do estimation/estimate
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. 
 . // Perform estimation.
@@ -521,7 +521,7 @@ meta_analysis_planned {c |}
 . // Make figures
 . do figures/figures
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. set graphics off
 {txt}
@@ -689,7 +689,7 @@ format
 . // Make the report.
 . do reports/report
 {txt}
-{com}. version 16.1
+{com}. version 18
 {txt}
 {com}. 
 . // Some locals to make this file a little more readable.
@@ -1238,7 +1238,7 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {com}. 
 . // Save the report to the specified filename.
 . putdocx save "${c -(}report_filename{c )-}", replace
-{res}successfully created {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx"}
+{res}successfully replaced {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx"}
 {txt}
 {com}. 
 {txt}end of do-file
@@ -1246,4 +1246,4 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {com}. 
 {txt}end of do-file
 
-{com}. exit
+{com}. 

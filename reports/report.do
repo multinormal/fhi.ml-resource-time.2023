@@ -1,4 +1,4 @@
-version 16.1
+version 18
 
 // Some locals to make this file a little more readable.
 local heading putdocx paragraph, style(Heading1)

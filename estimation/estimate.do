@@ -1,4 +1,4 @@
-version 16.1
+version 18
 
 // Perform estimation.
 foreach comparison of global comparisons {

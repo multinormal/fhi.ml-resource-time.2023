@@ -1,4 +1,4 @@
-version 16.1
+version 18
 
 // Set the random number generator seed.
 set rng  mt64s
