@@ -78,7 +78,7 @@ program resource_row
   estimate restore `comparison'_resource
   local contrast 1 // The comparisons are indicators, where 1 indicates our preferred ML use.
   lincom `contrast'.`comparison' , eform
-  local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
+  local estimate : disp %3.2f `r(estimate)' " (" %3.2f `r(lb)' " to " %3.2f `r(ub)' ")"
 
   // Get the p-value.
   if r(p) < ${p_threshold} local p "<${p_threshold}"
@@ -115,7 +115,7 @@ program time_row
   estimate restore `comparison'_time
   nlcom log(_b[ATE:r1vs0.`comparison'] + _b[POmean:0.`comparison']) - log(_b[POmean:0.`comparison']), post
   lincom _nl_1 , eform
-  local estimate : disp %3.1f `r(estimate)' " (" %3.1f `r(lb)' " to " %3.1f `r(ub)' ")"
+  local estimate : disp %3.2f `r(estimate)' " (" %3.2f `r(lb)' " to " %3.2f `r(ub)' ")"
 
   // Get the p-value.
   if r(p) < ${p_threshold} local p "<${p_threshold}"

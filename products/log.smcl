@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res} 5 Jun 2023, 13:02:37
+ {txt}opened on:  {res}13 Sep 2023, 12:20:28
 {txt}
 {com}. 
 . // Set up globals.
@@ -152,22 +152,24 @@
 . // stset the data.
 . stset completion , failure(completed) origin(time commission) scale(7 /*days*/)
 
-     {txt}failure event:  {res}completed != 0 & completed < .
-{txt}obs. time interval:  {res}(origin, completion]
-{txt} exit on or before:  {res}failure
-    {txt}t for analysis:  {res}(time-origin)/7
-            {txt}origin:  {res}time commission
+{txt}Survival-time data settings
 
-{txt}{hline 78}
+{col 10}Failure event: {res}completed!=0 & completed<.
+{col 1}{txt}Observed time interval: {res}(origin, completion]
+{col 6}{txt}Exit on or before: {res}failure
+{col 6}{txt}Time for analysis: {res}(time-origin)/7
+{col 17}{txt}Origin: {res}time commission
+
+{txt}{hline 74}
 {res}         39{txt}  total observations
-{res}          1{txt}  observation ends on or before enter()
-{hline 78}
+{res}          1{txt}  observation ends on or before {bf:enter()}
+{hline 74}
 {res}         38{txt}  observations remaining, representing
 {res}         35{txt}  failures in single-record/single-failure data
 {res}  1,211.571{txt}  total analysis time at risk and under observation
-                                                at risk from t = {res}        0
-                                     {txt}earliest observed entry t = {res}        0
-                                          {txt}last observed exit t = {res} 102.1429
+                                                At risk from t = {res}        0
+                                     {txt}Earliest observed entry t = {res}        0
+                                          {txt}Last observed exit t = {res} 102.1429
 {txt}
 {com}. 
 {txt}end of do-file
@@ -204,21 +206,21 @@
 {hline}
 {res}Analysis for: {ul:rec_vs_none} with respect to {ul:resource}
 
-{txt}Iteration 0:{space 3}log likelihood = {res:-55.193566}  
-Iteration 1:{space 3}log likelihood = {res:-55.193557}  
-Iteration 2:{space 3}log likelihood = {res:-55.193557}  
+{txt}Iteration 0:{space 2}Log likelihood = {res:-55.193566}  
+Iteration 1:{space 2}Log likelihood = {res:-55.193557}  
+Iteration 2:{space 2}Log likelihood = {res:-55.193557}  
 {res}
-{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        32
-{txt}{col 49}   Uncensored{col 67}= {res}        30
-{txt}{col 49}   Left-censored{col 67}= {res}         0
-{txt}{col 49}   Right-censored{col 67}= {res}         2
-{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+{txt}{col 1}Extended interval regression{col 53}{lalign 17:Number of obs}{col 70} = {res}{ralign 6:32}
+{txt}{col 53}{ralign 17:Uncensored}{col 70} = {res}{ralign 6:30}
+{txt}{col 53}{ralign 17:Left-censored}{col 70} = {res}{ralign 6:0}
+{txt}{col 53}{ralign 17:   Right-censored}{col 70} = {res}{ralign 6:2}
+{txt}{col 53}{ralign 17:Interval-cens.}{col 70} = {res}{ralign 6:0}
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      7.22
-{txt}Log likelihood = {res}-55.193557{txt}{col 49}Prob > chi2{col 67}= {res}    0.0270
+{txt}{col 53}{lalign 17:Wald chi2({res:2})}{col 70} = {res}{ralign 6:7.22}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-55.193557}{txt}{col 53}{lalign 17:Prob > chi2}{col 70} = {res}{ralign 6:0.0270}
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{col 37}{c |} Coefficient{col 49}  Std. err.{col 61}      z{col 69}   P>|z|{col 77}     [95% con{col 90}f. interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
 {space 31}Yes  {c |}{col 37}{res}{space 2}     0.97{col 49}{space 2}     0.37{col 60}{space 1}    2.63{col 69}{space 3} 0.01{col 77}{space 4}     0.25{col 90}{space 3}     1.70
@@ -240,7 +242,7 @@ Iteration 2:{space 3}log likelihood = {res:-55.193557}
 {res}{txt}(6 missing values generated)
 {res}{txt}(9 missing values generated)
 
-                   Shapiro-Wilk W test for normal data
+                   Shapiro–Wilk W test for normal data
 
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
@@ -248,18 +250,18 @@ Iteration 2:{space 3}log likelihood = {res:-55.193557}
 {hline}
 Analysis for: {ul:rec_vs_none} with respect to {ul:time}
 
-         {txt}failure _d:  {res}completed
-   {txt}analysis time _t:  {res}(completion-origin)/7
-             {txt}origin:  {res}time commission
+{col 9}{txt}Failure {bf:_d}: {res}completed
+{col 3}{txt}Analysis time {bf:_t}: {res}(completion-origin)/7
+{col 13}{txt}Origin: {res}time commission
 
-{txt}Iteration 0:{space 3}EE criterion = {res:  120.1604}  
-Iteration 1:{space 3}EE criterion = {res: 61.060309}  
-Iteration 2:{space 3}EE criterion = {res: 11.632408}  
-Iteration 3:{space 3}EE criterion = {res: .55421372}  
-Iteration 4:{space 3}EE criterion = {res: .06729877}  
-Iteration 5:{space 3}EE criterion = {res: 6.402e-06}  
-Iteration 6:{space 3}EE criterion = {res: 4.318e-12}  
-Iteration 7:{space 3}EE criterion = {res: 1.936e-24}  
+{txt}Iteration 0:{space 2}EE criterion = {res:  120.1604}  
+Iteration 1:{space 2}EE criterion = {res: 61.060309}  
+Iteration 2:{space 2}EE criterion = {res: 11.632408}  
+Iteration 3:{space 2}EE criterion = {res: .55421372}  
+Iteration 4:{space 2}EE criterion = {res: .06729877}  
+Iteration 5:{space 2}EE criterion = {res: 6.402e-06}  
+Iteration 6:{space 2}EE criterion = {res: 4.318e-12}  
+Iteration 7:{space 2}EE criterion = {res: 1.936e-24}  
 {res}
 {txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        32
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
@@ -268,7 +270,7 @@ Iteration 7:{space 3}EE criterion = {res: 1.936e-24}
 {txt:Censoring model}{col 16}:{res: none}
 {txt}{hline 23}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 24}{c |}{col 36}    Robust
-{col 1}                    _t{col 24}{c |}      Coef.{col 36}   Std. Err.{col 48}      z{col 56}   P>|z|{col 64}     [95% Con{col 77}f. Interval]
+{col 1}                    _t{col 24}{c |} Coefficient{col 36}  std. err.{col 48}      z{col 56}   P>|z|{col 64}     [95% con{col 77}f. interval]
 {hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                    {txt}{c |}
 {space 11}rec_vs_none {c |}
@@ -305,31 +307,31 @@ Iteration 7:{space 3}EE criterion = {res: 1.936e-24}
 {hline}
 {res}Analysis for: {ul:rec_vs_nonrec} with respect to {ul:resource}
 
-{txt}Iteration 0:{space 3}log likelihood = {res:-45.294405}  (not concave)
-Iteration 1:{space 3}log likelihood = {res:-43.745161}  (not concave)
-Iteration 2:{space 3}log likelihood = {res:-43.224654}  (not concave)
-Iteration 3:{space 3}log likelihood = {res:-43.122452}  (not concave)
-Iteration 4:{space 3}log likelihood = {res:-43.071866}  (not concave)
-Iteration 5:{space 3}log likelihood = {res:-42.965075}  
-Iteration 6:{space 3}log likelihood = {res:-42.579615}  
-Iteration 7:{space 3}log likelihood = {res:-42.254791}  
-Iteration 8:{space 3}log likelihood = {res:-42.193133}  
-Iteration 9:{space 3}log likelihood = {res:-42.160625}  
-Iteration 10:{space 2}log likelihood = {res:-42.156699}  
-Iteration 11:{space 2}log likelihood = {res:-42.156242}  
-Iteration 12:{space 2}log likelihood = {res:-42.156242}  
+{txt}Iteration 0:{space 2}Log likelihood = {res:-45.294405}  (not concave)
+Iteration 1:{space 2}Log likelihood = {res:-43.745161}  (not concave)
+Iteration 2:{space 2}Log likelihood = {res:-43.224654}  (not concave)
+Iteration 3:{space 2}Log likelihood = {res:-43.122452}  (not concave)
+Iteration 4:{space 2}Log likelihood = {res:-43.071866}  (not concave)
+Iteration 5:{space 2}Log likelihood = {res:-42.965075}  
+Iteration 6:{space 2}Log likelihood = {res:-42.579615}  
+Iteration 7:{space 2}Log likelihood = {res:-42.254791}  
+Iteration 8:{space 2}Log likelihood = {res:-42.193133}  
+Iteration 9:{space 2}Log likelihood = {res:-42.160625}  
+Iteration 10:{space 1}Log likelihood = {res:-42.156699}  
+Iteration 11:{space 1}Log likelihood = {res:-42.156242}  
+Iteration 12:{space 1}Log likelihood = {res:-42.156242}  
 {res}
-{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        27
-{txt}{col 49}   Uncensored{col 67}= {res}        24
-{txt}{col 49}   Left-censored{col 67}= {res}         0
-{txt}{col 49}   Right-censored{col 67}= {res}         3
-{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+{txt}{col 1}Extended interval regression{col 53}{lalign 17:Number of obs}{col 70} = {res}{ralign 6:27}
+{txt}{col 53}{ralign 17:Uncensored}{col 70} = {res}{ralign 6:24}
+{txt}{col 53}{ralign 17:Left-censored}{col 70} = {res}{ralign 6:0}
+{txt}{col 53}{ralign 17:   Right-censored}{col 70} = {res}{ralign 6:3}
+{txt}{col 53}{ralign 17:Interval-cens.}{col 70} = {res}{ralign 6:0}
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      1.93
-{txt}Log likelihood = {res}-42.156242{txt}{col 49}Prob > chi2{col 67}= {res}    0.3813
+{txt}{col 53}{lalign 17:Wald chi2({res:2})}{col 70} = {res}{ralign 6:1.93}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-42.156242}{txt}{col 53}{lalign 17:Prob > chi2}{col 70} = {res}{ralign 6:0.3813}
 
 {txt}{hline 38}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 39}{c |}      Coef.{col 51}   Std. Err.{col 63}      z{col 71}   P>|z|{col 79}     [95% Con{col 92}f. Interval]
+{col 39}{c |} Coefficient{col 51}  Std. err.{col 63}      z{col 71}   P>|z|{col 79}     [95% con{col 92}f. interval]
 {hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 16}meta_analysis_planned {c |}
 {space 33}Yes  {c |}{col 39}{res}{space 2}     0.32{col 51}{space 2}     0.28{col 62}{space 1}    1.11{col 71}{space 3} 0.27{col 79}{space 4}    -0.24{col 92}{space 3}     0.87
@@ -351,7 +353,7 @@ Iteration 12:{space 2}log likelihood = {res:-42.156242}
 {res}{txt}(12 missing values generated)
 {res}{txt}(15 missing values generated)
 
-                   Shapiro-Wilk W test for normal data
+                   Shapiro–Wilk W test for normal data
 
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
@@ -359,12 +361,12 @@ Iteration 12:{space 2}log likelihood = {res:-42.156242}
 {hline}
 Analysis for: {ul:rec_vs_nonrec} with respect to {ul:time}
 
-         {txt}failure _d:  {res}completed
-   {txt}analysis time _t:  {res}(completion-origin)/7
-             {txt}origin:  {res}time commission
+{col 9}{txt}Failure {bf:_d}: {res}completed
+{col 3}{txt}Analysis time {bf:_t}: {res}(completion-origin)/7
+{col 13}{txt}Origin: {res}time commission
 
-{txt}Iteration 0:{space 3}EE criterion = {res: 1.532e-14}  
-Iteration 1:{space 3}EE criterion = {res: 5.342e-27}  
+{txt}Iteration 0:{space 2}EE criterion = {res: 1.532e-14}  
+Iteration 1:{space 2}EE criterion = {res: 5.342e-27}  
 {res}
 {txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        26
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
@@ -373,7 +375,7 @@ Iteration 1:{space 3}EE criterion = {res: 5.342e-27}
 {txt:Censoring model}{col 16}:{res: none}
 {txt}{hline 34}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 35}{c |}{col 47}    Robust
-{col 1}                               _t{col 35}{c |}      Coef.{col 47}   Std. Err.{col 59}      z{col 67}   P>|z|{col 75}     [95% Con{col 88}f. Interval]
+{col 1}                               _t{col 35}{c |} Coefficient{col 47}  std. err.{col 59}      z{col 67}   P>|z|{col 75}     [95% con{col 88}f. interval]
 {hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                               {txt}{c |}
 {space 20}rec_vs_nonrec {c |}
@@ -410,26 +412,26 @@ Iteration 1:{space 3}EE criterion = {res: 5.342e-27}
 {hline}
 {res}Analysis for: {ul:any_vs_none} with respect to {ul:resource}
 
-{txt}Iteration 0:{space 3}log likelihood = {res:-66.568371}  (not concave)
-Iteration 1:{space 3}log likelihood = {res:-65.528145}  (not concave)
-Iteration 2:{space 3}log likelihood = {res:-65.469714}  
-Iteration 3:{space 3}log likelihood = {res:-65.102147}  
-Iteration 4:{space 3}log likelihood = {res:-64.985316}  
-Iteration 5:{space 3}log likelihood = {res: -64.98295}  
-Iteration 6:{space 3}log likelihood = {res:-64.982942}  
-Iteration 7:{space 3}log likelihood = {res:-64.982942}  
+{txt}Iteration 0:{space 2}Log likelihood = {res:-66.568371}  (not concave)
+Iteration 1:{space 2}Log likelihood = {res:-65.528145}  (not concave)
+Iteration 2:{space 2}Log likelihood = {res:-65.469714}  
+Iteration 3:{space 2}Log likelihood = {res:-65.102147}  
+Iteration 4:{space 2}Log likelihood = {res:-64.985316}  
+Iteration 5:{space 2}Log likelihood = {res: -64.98295}  
+Iteration 6:{space 2}Log likelihood = {res:-64.982942}  
+Iteration 7:{space 2}Log likelihood = {res:-64.982942}  
 {res}
-{txt}Extended interval regression{col 49}Number of obs{col 67}= {res}        38
-{txt}{col 49}   Uncensored{col 67}= {res}        35
-{txt}{col 49}   Left-censored{col 67}= {res}         0
-{txt}{col 49}   Right-censored{col 67}= {res}         3
-{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+{txt}{col 1}Extended interval regression{col 53}{lalign 17:Number of obs}{col 70} = {res}{ralign 6:38}
+{txt}{col 53}{ralign 17:Uncensored}{col 70} = {res}{ralign 6:35}
+{txt}{col 53}{ralign 17:Left-censored}{col 70} = {res}{ralign 6:0}
+{txt}{col 53}{ralign 17:   Right-censored}{col 70} = {res}{ralign 6:3}
+{txt}{col 53}{ralign 17:Interval-cens.}{col 70} = {res}{ralign 6:0}
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     10.37
-{txt}Log likelihood = {res}-64.982942{txt}{col 49}Prob > chi2{col 67}= {res}    0.0056
+{txt}{col 53}{lalign 17:Wald chi2({res:2})}{col 70} = {res}{ralign 6:10.37}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-64.982942}{txt}{col 53}{lalign 17:Prob > chi2}{col 70} = {res}{ralign 6:0.0056}
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{col 37}{c |} Coefficient{col 49}  Std. err.{col 61}      z{col 69}   P>|z|{col 77}     [95% con{col 90}f. interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
 {space 31}Yes  {c |}{col 37}{res}{space 2}     0.99{col 49}{space 2}     0.31{col 60}{space 1}    3.17{col 69}{space 3} 0.00{col 77}{space 4}     0.38{col 90}{space 3}     1.61
@@ -450,7 +452,7 @@ Iteration 7:{space 3}log likelihood = {res:-64.982942}
 (option {bf:mean} assumed; average structural function mean)
 {res}{txt}(4 missing values generated)
 
-                   Shapiro-Wilk W test for normal data
+                   Shapiro–Wilk W test for normal data
 
     Variable {c |}        Obs{col 33}W{col 45}V{col 55}z       Prob>z
 {hline 13}{c +}{hline 54}
@@ -458,17 +460,17 @@ Iteration 7:{space 3}log likelihood = {res:-64.982942}
 {hline}
 Analysis for: {ul:any_vs_none} with respect to {ul:time}
 
-         {txt}failure _d:  {res}completed
-   {txt}analysis time _t:  {res}(completion-origin)/7
-             {txt}origin:  {res}time commission
+{col 9}{txt}Failure {bf:_d}: {res}completed
+{col 3}{txt}Analysis time {bf:_t}: {res}(completion-origin)/7
+{col 13}{txt}Origin: {res}time commission
 
-{txt}Iteration 0:{space 3}EE criterion = {res: 19.503406}  
-Iteration 1:{space 3}EE criterion = {res: 3.0309072}  
-Iteration 2:{space 3}EE criterion = {res: 1.4895084}  
-Iteration 3:{space 3}EE criterion = {res: .07823929}  
-Iteration 4:{space 3}EE criterion = {res: .00005116}  
-Iteration 5:{space 3}EE criterion = {res: 1.580e-09}  
-Iteration 6:{space 3}EE criterion = {res: 2.081e-19}  
+{txt}Iteration 0:{space 2}EE criterion = {res: 19.503406}  
+Iteration 1:{space 2}EE criterion = {res: 3.0309072}  
+Iteration 2:{space 2}EE criterion = {res: 1.4895084}  
+Iteration 3:{space 2}EE criterion = {res: .07823929}  
+Iteration 4:{space 2}EE criterion = {res: .00005116}  
+Iteration 5:{space 2}EE criterion = {res: 1.580e-09}  
+Iteration 6:{space 2}EE criterion = {res: 2.081e-19}  
 {res}
 {txt}Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}        38
 {txt:Estimator}{col 16}:{res: IPW regression adjustment}
@@ -477,7 +479,7 @@ Iteration 6:{space 3}EE criterion = {res: 2.081e-19}
 {txt:Censoring model}{col 16}:{res: none}
 {txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 23}{c |}{col 35}    Robust
-{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
+{col 1}                   _t{col 23}{c |} Coefficient{col 35}  std. err.{col 47}      z{col 55}   P>|z|{col 63}     [95% con{col 76}f. interval]
 {hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                   {txt}{c |}
 {space 10}any_vs_none {c |}
@@ -576,34 +578,88 @@ meta_analysis_planned {c |}
 {txt} 24{com}. {c )-}
 {res}{txt}0 1
 
-         failure _d:  {res}completed
-   {txt}analysis time _t:  {res}(completion-origin)/7
-             {txt}origin:  {res}time commission
-{txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.png written in PNG format)
-(file products/Time-to-completion for Recommended vs No ML Use.pdf written in PDF format)
-(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif written in TIFF format)
+{col 9}Failure {bf:_d}: {res}completed
+{col 3}{txt}Analysis time {bf:_t}: {res}(completion-origin)/7
+{col 13}{txt}Origin: {res}time commission
+{txt}{p 0 4 2}
+file {bf}
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.png{rm}
+saved as
+PNG
+format
+{p_end}
+{p 0 4 2}
+file {bf}
+products/Time-to-completion for Recommended vs No ML Use.pdf{rm}
+saved as
+PDF
+format
+{p_end}
+{p 0 4 2}
+file {bf}
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif{rm}
+saved as
+TIFF
+format
+{p_end}
 
 /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif
   /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs No ML Use.tif
 {res}{txt}0 1
 
-         failure _d:  {res}completed
-   {txt}analysis time _t:  {res}(completion-origin)/7
-             {txt}origin:  {res}time commission
-{txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.png written in PNG format)
-(file products/Time-to-completion for Recommended vs Non-recommended ML Use.pdf written in PDF format)
-(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif written in TIFF format)
+{col 9}Failure {bf:_d}: {res}completed
+{col 3}{txt}Analysis time {bf:_t}: {res}(completion-origin)/7
+{col 13}{txt}Origin: {res}time commission
+{txt}{p 0 4 2}
+file {bf}
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.png{rm}
+saved as
+PNG
+format
+{p_end}
+{p 0 4 2}
+file {bf}
+products/Time-to-completion for Recommended vs Non-recommended ML Use.pdf{rm}
+saved as
+PDF
+format
+{p_end}
+{p 0 4 2}
+file {bf}
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif{rm}
+saved as
+TIFF
+format
+{p_end}
 
 /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif
   /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Recommended vs Non-recommended ML Use.tif
 {res}{txt}0 1
 
-         failure _d:  {res}completed
-   {txt}analysis time _t:  {res}(completion-origin)/7
-             {txt}origin:  {res}time commission
-{txt}(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.png written in PNG format)
-(file products/Time-to-completion for Any vs No ML Use.pdf written in PDF format)
-(file /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif written in TIFF format)
+{col 9}Failure {bf:_d}: {res}completed
+{col 3}{txt}Analysis time {bf:_t}: {res}(completion-origin)/7
+{col 13}{txt}Origin: {res}time commission
+{txt}{p 0 4 2}
+file {bf}
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.png{rm}
+saved as
+PNG
+format
+{p_end}
+{p 0 4 2}
+file {bf}
+products/Time-to-completion for Any vs No ML Use.pdf{rm}
+saved as
+PDF
+format
+{p_end}
+{p 0 4 2}
+file {bf}
+/Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif{rm}
+saved as
+TIFF
+format
+{p_end}
 
 /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif
   /Users/cjr/Repos/fhi.ml-resource-time.2023/products/Time-to-completion for Any vs No ML Use.tif
@@ -813,12 +869,12 @@ meta_analysis_planned {c |}
 {res}{txt}0 1
   {res}12
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
   21
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
 {txt}(results {stata estimates replay rec_vs_none_resource:rec_vs_none_resource} are active now)
@@ -826,19 +882,19 @@ log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.rec_vs_none = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 14}{c |}     exp(b){col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     3.71{col 26}{space 2}     4.40{col 37}{space 1}    1.11{col 46}{space 3} 0.27{col 54}{space 4}     0.36{col 67}{space 3}    37.95
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}0 1
   {res}6
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}          5    6.789035    .8300506   5.828946   7.728416
   21
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
 {txt}(results {stata estimates replay rec_vs_nonrec_resource:rec_vs_nonrec_resource} are active now)
@@ -846,19 +902,19 @@ log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.rec_vs_nonrec = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 14}{c |}     exp(b){col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.50{col 26}{space 2}     0.78{col 37}{space 1}   -0.44{col 46}{space 3} 0.66{col 54}{space 4}     0.02{col 67}{space 3}    10.74
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}0 1
   {res}12
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
   27
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {txt}(results {stata estimates replay any_vs_none_resource:any_vs_none_resource} are active now)
@@ -866,27 +922,27 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.any_vs_none = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 14}{c |}     exp(b){col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.65{col 26}{space 2}     0.36{col 37}{space 1}   -0.77{col 46}{space 3} 0.44{col 54}{space 4}     0.22{col 67}{space 3}     1.93
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}0 1
   {res}12
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         12     28.2381     31.0725   4.857143   101.8571
   21
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         18     27.5873    15.44062   7.142857         60
 {txt}(results {stata estimates replay rec_vs_none_time:rec_vs_none_time} are active now)
 
-       _nl_1:  {res}log(_b[ATE:r1vs0.rec_vs_none] + _b[POmean:0.rec_vs_none]) - log(_b[POmean:0.rec_vs_none])
+       _nl_1: {res}log(_b[ATE:r1vs0.rec_vs_none] + _b[POmean:0.rec_vs_none]) - log(_b[POmean:0.rec_vs_none])
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 1}          _t{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 1}          _t{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 7}_nl_1 {c |}{col 14}{res}{space 2}    -0.09{col 26}{space 2}     0.28{col 37}{space 1}   -0.31{col 46}{space 3} 0.75{col 54}{space 4}    -0.63{col 67}{space 3}     0.45
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
@@ -894,27 +950,27 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}_nl_1 = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.92{col 26}{space 2}     0.25{col 37}{space 1}   -0.31{col 46}{space 3} 0.75{col 54}{space 4}     0.53{col 67}{space 3}     1.58
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}0 1
   {res}6
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}          5    36.22857    26.41073   15.57143   81.42857
   21
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         18     27.5873    15.44062   7.142857         60
 {txt}(results {stata estimates replay rec_vs_nonrec_time:rec_vs_nonrec_time} are active now)
 
-       _nl_1:  {res}log(_b[ATE:r1vs0.rec_vs_nonrec] + _b[POmean:0.rec_vs_nonrec]) - log(_b[POmean:0.rec_vs_nonrec])
+       _nl_1: {res}log(_b[ATE:r1vs0.rec_vs_nonrec] + _b[POmean:0.rec_vs_nonrec]) - log(_b[POmean:0.rec_vs_nonrec])
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 1}          _t{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 1}          _t{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 7}_nl_1 {c |}{col 14}{res}{space 2}     0.12{col 26}{space 2}     0.26{col 37}{space 1}    0.44{col 46}{space 3} 0.66{col 54}{space 4}    -0.40{col 67}{space 3}     0.64
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
@@ -922,27 +978,27 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}_nl_1 = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     1.12{col 26}{space 2}     0.30{col 37}{space 1}    0.44{col 46}{space 3} 0.66{col 54}{space 4}     0.67{col 67}{space 3}     1.89
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}{txt}0 1
   {res}12
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         12     28.2381     31.0725   4.857143   101.8571
   27
 
-{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}_t {c |}{res}         23    29.46584    18.00923   7.142857   81.42857
 {txt}(results {stata estimates replay any_vs_none_time:any_vs_none_time} are active now)
 
-       _nl_1:  {res}log(_b[ATE:r1vs0.any_vs_none] + _b[POmean:0.any_vs_none]) - log(_b[POmean:0.any_vs_none])
+       _nl_1: {res}log(_b[ATE:r1vs0.any_vs_none] + _b[POmean:0.any_vs_none]) - log(_b[POmean:0.any_vs_none])
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 1}          _t{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 1}          _t{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 7}_nl_1 {c |}{col 14}{res}{space 2}    -0.07{col 26}{space 2}     0.25{col 37}{space 1}   -0.27{col 46}{space 3} 0.78{col 54}{space 4}    -0.55{col 67}{space 3}     0.42
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
@@ -950,7 +1006,7 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}_nl_1 = 0{p_end}
 
 {txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. Err.{col 38}      z{col 46}   P>|z|{col 54}     [95% Con{col 67}f. Interval]
+{col 1}          _t{col 14}{c |}     exp(b){col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.93{col 26}{space 2}     0.23{col 37}{space 1}   -0.27{col 46}{space 3} 0.78{col 54}{space 4}     0.58{col 67}{space 3}     1.51
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
@@ -1013,17 +1069,17 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {p 0 8}Model {hi:rec_vs_none_resource}{p_end}
 {hline}
 
-Extended interval regression{col 49}Number of obs{col 67}= {res}        32
-{txt}{col 49}   Uncensored{col 67}= {res}        30
-{txt}{col 49}   Left-censored{col 67}= {res}         0
-{txt}{col 49}   Right-censored{col 67}= {res}         2
-{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+{col 1}Extended interval regression{col 53}{lalign 17:Number of obs}{col 70} = {res}{ralign 6:32}
+{txt}{col 53}{ralign 17:Uncensored}{col 70} = {res}{ralign 6:30}
+{txt}{col 53}{ralign 17:Left-censored}{col 70} = {res}{ralign 6:0}
+{txt}{col 53}{ralign 17:   Right-censored}{col 70} = {res}{ralign 6:2}
+{txt}{col 53}{ralign 17:Interval-cens.}{col 70} = {res}{ralign 6:0}
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      7.22
-{txt}Log likelihood = {res}-55.193557{txt}{col 49}Prob > chi2{col 67}= {res}    0.0270
+{txt}{col 53}{lalign 17:Wald chi2({res:2})}{col 70} = {res}{ralign 6:7.22}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-55.193557}{txt}{col 53}{lalign 17:Prob > chi2}{col 70} = {res}{ralign 6:0.0270}
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{col 37}{c |} Coefficient{col 49}  Std. err.{col 61}      z{col 69}   P>|z|{col 77}     [95% con{col 90}f. interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
 {space 31}Yes  {c |}{col 37}{res}{space 2}     0.97{col 49}{space 2}     0.37{col 60}{space 1}    2.63{col 69}{space 3} 0.01{col 77}{space 4}     0.25{col 90}{space 3}     1.70
@@ -1054,7 +1110,7 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {txt:Censoring model}{col 16}:{res: none}
 {txt}{hline 23}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 24}{c |}{col 36}    Robust
-{col 1}                    _t{col 24}{c |}      Coef.{col 36}   Std. Err.{col 48}      z{col 56}   P>|z|{col 64}     [95% Con{col 77}f. Interval]
+{col 1}                    _t{col 24}{c |} Coefficient{col 36}  std. err.{col 48}      z{col 56}   P>|z|{col 64}     [95% con{col 77}f. interval]
 {hline 23}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                    {txt}{c |}
 {space 11}rec_vs_none {c |}
@@ -1070,17 +1126,17 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {p 0 8}Model {hi:rec_vs_nonrec_resource}{p_end}
 {hline}
 
-Extended interval regression{col 49}Number of obs{col 67}= {res}        27
-{txt}{col 49}   Uncensored{col 67}= {res}        24
-{txt}{col 49}   Left-censored{col 67}= {res}         0
-{txt}{col 49}   Right-censored{col 67}= {res}         3
-{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+{col 1}Extended interval regression{col 53}{lalign 17:Number of obs}{col 70} = {res}{ralign 6:27}
+{txt}{col 53}{ralign 17:Uncensored}{col 70} = {res}{ralign 6:24}
+{txt}{col 53}{ralign 17:Left-censored}{col 70} = {res}{ralign 6:0}
+{txt}{col 53}{ralign 17:   Right-censored}{col 70} = {res}{ralign 6:3}
+{txt}{col 53}{ralign 17:Interval-cens.}{col 70} = {res}{ralign 6:0}
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}      1.93
-{txt}Log likelihood = {res}-42.156242{txt}{col 49}Prob > chi2{col 67}= {res}    0.3813
+{txt}{col 53}{lalign 17:Wald chi2({res:2})}{col 70} = {res}{ralign 6:1.93}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-42.156242}{txt}{col 53}{lalign 17:Prob > chi2}{col 70} = {res}{ralign 6:0.3813}
 
 {txt}{hline 38}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 39}{c |}      Coef.{col 51}   Std. Err.{col 63}      z{col 71}   P>|z|{col 79}     [95% Con{col 92}f. Interval]
+{col 39}{c |} Coefficient{col 51}  Std. err.{col 63}      z{col 71}   P>|z|{col 79}     [95% con{col 92}f. interval]
 {hline 38}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 16}meta_analysis_planned {c |}
 {space 33}Yes  {c |}{col 39}{res}{space 2}     0.32{col 51}{space 2}     0.28{col 62}{space 1}    1.11{col 71}{space 3} 0.27{col 79}{space 4}    -0.24{col 92}{space 3}     0.87
@@ -1111,7 +1167,7 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {txt:Censoring model}{col 16}:{res: none}
 {txt}{hline 34}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 35}{c |}{col 47}    Robust
-{col 1}                               _t{col 35}{c |}      Coef.{col 47}   Std. Err.{col 59}      z{col 67}   P>|z|{col 75}     [95% Con{col 88}f. Interval]
+{col 1}                               _t{col 35}{c |} Coefficient{col 47}  std. err.{col 59}      z{col 67}   P>|z|{col 75}     [95% con{col 88}f. interval]
 {hline 34}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                               {txt}{c |}
 {space 20}rec_vs_nonrec {c |}
@@ -1127,17 +1183,17 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {p 0 8}Model {hi:any_vs_none_resource}{p_end}
 {hline}
 
-Extended interval regression{col 49}Number of obs{col 67}= {res}        38
-{txt}{col 49}   Uncensored{col 67}= {res}        35
-{txt}{col 49}   Left-censored{col 67}= {res}         0
-{txt}{col 49}   Right-censored{col 67}= {res}         3
-{txt}{col 49}   Interval-cens.{col 67}= {res}         0
+{col 1}Extended interval regression{col 53}{lalign 17:Number of obs}{col 70} = {res}{ralign 6:38}
+{txt}{col 53}{ralign 17:Uncensored}{col 70} = {res}{ralign 6:35}
+{txt}{col 53}{ralign 17:Left-censored}{col 70} = {res}{ralign 6:0}
+{txt}{col 53}{ralign 17:   Right-censored}{col 70} = {res}{ralign 6:3}
+{txt}{col 53}{ralign 17:Interval-cens.}{col 70} = {res}{ralign 6:0}
 
-{txt}{col 49}Wald chi2({res}2{txt}){col 67}= {res}     10.37
-{txt}Log likelihood = {res}-64.982942{txt}{col 49}Prob > chi2{col 67}= {res}    0.0056
+{txt}{col 53}{lalign 17:Wald chi2({res:2})}{col 70} = {res}{ralign 6:10.37}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-64.982942}{txt}{col 53}{lalign 17:Prob > chi2}{col 70} = {res}{ralign 6:0.0056}
 
 {txt}{hline 36}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{col 37}{c |}      Coef.{col 49}   Std. Err.{col 61}      z{col 69}   P>|z|{col 77}     [95% Con{col 90}f. Interval]
+{col 37}{c |} Coefficient{col 49}  Std. err.{col 61}      z{col 69}   P>|z|{col 77}     [95% con{col 90}f. interval]
 {hline 36}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 14}meta_analysis_planned {c |}
 {space 31}Yes  {c |}{col 37}{res}{space 2}     0.99{col 49}{space 2}     0.31{col 60}{space 1}    3.17{col 69}{space 3} 0.00{col 77}{space 4}     0.38{col 90}{space 3}     1.61
@@ -1168,7 +1224,7 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {txt:Censoring model}{col 16}:{res: none}
 {txt}{hline 22}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {col 23}{c |}{col 35}    Robust
-{col 1}                   _t{col 23}{c |}      Coef.{col 35}   Std. Err.{col 47}      z{col 55}   P>|z|{col 63}     [95% Con{col 76}f. Interval]
+{col 1}                   _t{col 23}{c |} Coefficient{col 35}  std. err.{col 47}      z{col 55}   P>|z|{col 63}     [95% con{col 76}f. interval]
 {hline 22}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {res}ATE                   {txt}{c |}
 {space 10}any_vs_none {c |}
@@ -1182,7 +1238,7 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {com}. 
 . // Save the report to the specified filename.
 . putdocx save "${c -(}report_filename{c )-}", replace
-{res}successfully replaced {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx"}
+{res}successfully created {browse "/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx":"/Users/cjr/Repos/fhi.ml-resource-time.2023/products/ml-resource-time-report.docx"}
 {txt}
 {com}. 
 {txt}end of do-file
@@ -1190,4 +1246,4 @@ Survival treatment-effects estimation{col 49}Number of obs {col 67}= {res}      
 {com}. 
 {txt}end of do-file
 
-{com}. 
+{com}. exit
