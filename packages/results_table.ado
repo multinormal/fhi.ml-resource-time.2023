@@ -33,7 +33,7 @@ program results_table
     // Format the table.
     putdocx table results(1,1) = ("Type of ML Use")
     putdocx table results(1,2) = ("Reviews")
-    putdocx table results(1,3) = ("Sample Mean¹")
+    putdocx table results(1,3) = ("Mean (SD)¹")
     putdocx table results(1,4) = ("Effect Estimate²")
     putdocx table results(1,5) = ("p-value")
     putdocx table results(2,3) = ("Person-hours")
@@ -58,19 +58,28 @@ program resource_row
   syntax varname(numeric fv) , frame(name local)
   local comparison `varlist'
 
+  // Get the number of reviews included in the analysis for the comparison.
+  count if !missing(`comparison')
+  local sample_size = r(N)
+
   // Get the levels of the comparison.
   levelsof `comparison'
   local levels `r(levels)'
   assert r(r) == 2
 
-  // Get the Ns and sample means for the levels of the comparison and the level names.
+  // Get the Ns and sample means and SDs for the levels of the comparison and the level names.
   forvalues i = 1/2 {
     local this_level : word `i' of `levels'
     count if `comparison' == `this_level'
-    local n_`i' : disp `r(N)'
-    summarize log_resource1 if `comparison' == `this_level' & completed
-    local mean_`i' = exp(r(mean))
-    local mean_`i' : disp %3.0f `mean_`i''
+    local n_`i' : disp `r(N)' "/`sample_size'" 
+
+    // Compute the sample mean using non-logged values.
+    tempvar log_resource
+    generate `log_resource' = exp(log_resource1)
+    summarize `log_resource' if `comparison' == `this_level' & completed
+    local mean_`i' = r(mean) // Mean on the natural scale.
+    local sd_`i' = r(sd) // SD on the natural scale.
+    local mean_`i' : disp %3.0f `mean_`i'' " (" %3.0f `sd_`i'' ")"
     local name_`i' : label (`comparison') `this_level'
   }
 
@@ -93,6 +102,10 @@ program time_row
   syntax varname(numeric fv) , frame(name local)
   local comparison `varlist'
 
+  // Get the number of reviews included in the analysis for the comparison.
+  count if !missing(`comparison')
+  local sample_size = r(N)
+
   // Get the levels of the comparison.
   levelsof `comparison'
   local levels `r(levels)'
@@ -102,10 +115,11 @@ program time_row
   forvalues i = 1/2 {
     local this_level : word `i' of `levels'
     count if `comparison' == `this_level'
-    local n_`i' : disp `r(N)'
+    local n_`i' : disp `r(N)' "/`sample_size'" 
     summarize _t if `comparison' == `this_level' & completed
     local mean_`i' = r(mean)
-    local mean_`i' : disp %3.1f `mean_`i''
+    local sd_`i' = r(sd)
+    local mean_`i' : disp %3.1f `mean_`i'' " (" %2.1f `sd_`i'' ")"
     local name_`i' : label (`comparison') `this_level'
   }
 

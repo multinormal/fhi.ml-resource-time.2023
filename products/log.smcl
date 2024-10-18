@@ -3,7 +3,7 @@
       name:  {res}ML noML
        {txt}log:  {res}/Users/cjr/Repos/fhi.ml-resource-time.2023/products/log.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}13 Sep 2023, 12:22:16
+ {txt}opened on:  {res}18 Oct 2024, 13:55:05
 {txt}
 {com}. 
 . // Set up globals.
@@ -866,17 +866,20 @@ format
 {com}. 
 . // Insert the table of results.
 . results_table
-{res}{txt}0 1
+  {res}33
+{txt}0 1
   {res}12
+{txt}(1 missing value generated)
 
-{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
+{space 4}__000002 {c |}{res}         11    290.7273    379.1367         25       1052
   21
+{txt}(1 missing value generated)
 
-{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
+{space 4}__000003 {c |}{res}         19    667.0527    366.6274        180       1442
 {txt}(results {stata estimates replay rec_vs_none_resource:rec_vs_none_resource} are active now)
 
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.rec_vs_none = 0{p_end}
@@ -886,17 +889,20 @@ log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     3.71{col 26}{space 2}     4.40{col 37}{space 1}    1.11{col 46}{space 3} 0.27{col 54}{space 4}     0.36{col 67}{space 3}    37.95
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}0 1
+  {res}27
+{txt}0 1
   {res}6
+{txt}(1 missing value generated)
 
-{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}          5    6.789035    .8300506   5.828946   7.728416
+{space 4}__000002 {c |}{res}          5      1158.4     892.905        340       2272
   21
+{txt}(1 missing value generated)
 
-{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
+{space 4}__000003 {c |}{res}         19    667.0527    366.6274        180       1442
 {txt}(results {stata estimates replay rec_vs_nonrec_resource:rec_vs_nonrec_resource} are active now)
 
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.rec_vs_nonrec = 0{p_end}
@@ -906,17 +912,20 @@ log_resour~1 {c |}{res}         19    6.344384    .6060508   5.192957   7.273787
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.50{col 26}{space 2}     0.78{col 37}{space 1}   -0.44{col 46}{space 3} 0.66{col 54}{space 4}     0.02{col 67}{space 3}    10.74
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}0 1
+  {res}39
+{txt}0 1
   {res}12
+{txt}(1 missing value generated)
 
-{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}         11    4.942194    1.233002   3.218876   6.958448
+{space 4}__000002 {c |}{res}         11    290.7273    379.1367         25       1052
   27
+{txt}(1 missing value generated)
 
-{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
 {hline 13}{c +}{hline 57}
-log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
+{space 4}__000003 {c |}{res}         24    769.4167    534.2296        180       2272
 {txt}(results {stata estimates replay any_vs_none_resource:any_vs_none_resource} are active now)
 
 {p 0 7}{space 1}{text:( 1)}{space 1} {res}[log_resource1]1.any_vs_none = 0{p_end}
@@ -926,7 +935,8 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.65{col 26}{space 2}     0.36{col 37}{space 1}   -0.77{col 46}{space 3} 0.44{col 54}{space 4}     0.22{col 67}{space 3}     1.93
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}0 1
+  {res}33
+{txt}0 1
   {res}12
 
 {txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
@@ -954,7 +964,8 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     0.92{col 26}{space 2}     0.25{col 37}{space 1}   -0.31{col 46}{space 3} 0.75{col 54}{space 4}     0.53{col 67}{space 3}     1.58
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}0 1
+  {res}27
+{txt}0 1
   {res}6
 
 {txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
@@ -982,7 +993,8 @@ log_resour~1 {c |}{res}         24     6.43702    .6643046   5.192957   7.728416
 {hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
 {space 9}(1) {c |}{col 14}{res}{space 2}     1.12{col 26}{space 2}     0.30{col 37}{space 1}    0.44{col 46}{space 3} 0.66{col 54}{space 4}     0.67{col 67}{space 3}     1.89
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}0 1
+  {res}39
+{txt}0 1
   {res}12
 
 {txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max

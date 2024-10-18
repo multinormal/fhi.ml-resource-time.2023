@@ -90,7 +90,7 @@ program count_reviews, nclass
     if "`if'" != "" count if ``predicate'' & `if'
     local count   = r(N)
     local percent = 100 * (r(N) / `total')
-    if `count' >= 1 local result : disp `count' " (" %2.0f `percent' "%" ")"
+    if `count' >= 1 local result : disp `count' "/" `total' " (" %2.0f `percent' "%" ")"
     if `count' == 0 local result : disp `count'
     putdocx table `table'(`row', `=1+`i'') = ("`result'")
   }
